@@ -56,6 +56,18 @@ CMAKE_BINARY_DIR = /Users/dsan/Documents/Tesi/Codice
 #=============================================================================
 # Targets provided globally by CMake.
 
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/local/Cellar/cmake/3.13.4/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/local/Cellar/cmake/3.13.4/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip/fast
+
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
@@ -89,17 +101,16 @@ rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
 
-# Special rule for the target install/strip
-install/strip: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/usr/local/Cellar/cmake/3.13.4/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
+	/usr/local/Cellar/cmake/3.13.4/bin/ccmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : edit_cache
 
-# Special rule for the target install/strip
-install/strip/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/usr/local/Cellar/cmake/3.13.4/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip/fast
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
+
+.PHONY : edit_cache/fast
 
 # Special rule for the target install
 install: preinstall
@@ -112,17 +123,6 @@ install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
 	/usr/local/Cellar/cmake/3.13.4/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
-
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
-	/usr/local/Cellar/cmake/3.13.4/bin/ccmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : edit_cache
-
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
-
-.PHONY : edit_cache/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -157,6 +157,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named ArpScanner
+
+# Build rule for target.
+ArpScanner: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 ArpScanner
+.PHONY : ArpScanner
+
+# fast build rule for target.
+ArpScanner/fast:
+	$(MAKE) -f CMakeFiles/ArpScanner.dir/build.make CMakeFiles/ArpScanner.dir/build
+.PHONY : ArpScanner/fast
+
+#=============================================================================
 # Target rules for targets named pcap_radiotap
 
 # Build rule for target.
@@ -168,19 +181,6 @@ pcap_radiotap: cmake_check_build_system
 pcap_radiotap/fast:
 	$(MAKE) -f CMakeFiles/pcap_radiotap.dir/build.make CMakeFiles/pcap_radiotap.dir/build
 .PHONY : pcap_radiotap/fast
-
-#=============================================================================
-# Target rules for targets named RadiotapScanner
-
-# Build rule for target.
-RadiotapScanner: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 RadiotapScanner
-.PHONY : RadiotapScanner
-
-# fast build rule for target.
-RadiotapScanner/fast:
-	$(MAKE) -f CMakeFiles/RadiotapScanner.dir/build.make CMakeFiles/RadiotapScanner.dir/build
-.PHONY : RadiotapScanner/fast
 
 #=============================================================================
 # Target rules for targets named Device
@@ -196,19 +196,6 @@ Device/fast:
 .PHONY : Device/fast
 
 #=============================================================================
-# Target rules for targets named ArpScanner
-
-# Build rule for target.
-ArpScanner: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 ArpScanner
-.PHONY : ArpScanner
-
-# fast build rule for target.
-ArpScanner/fast:
-	$(MAKE) -f CMakeFiles/ArpScanner.dir/build.make CMakeFiles/ArpScanner.dir/build
-.PHONY : ArpScanner/fast
-
-#=============================================================================
 # Target rules for targets named radiotap
 
 # Build rule for target.
@@ -220,6 +207,32 @@ radiotap: cmake_check_build_system
 radiotap/fast:
 	$(MAKE) -f CMakeFiles/radiotap.dir/build.make CMakeFiles/radiotap.dir/build
 .PHONY : radiotap/fast
+
+#=============================================================================
+# Target rules for targets named Pinger
+
+# Build rule for target.
+Pinger: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 Pinger
+.PHONY : Pinger
+
+# fast build rule for target.
+Pinger/fast:
+	$(MAKE) -f CMakeFiles/Pinger.dir/build.make CMakeFiles/Pinger.dir/build
+.PHONY : Pinger/fast
+
+#=============================================================================
+# Target rules for targets named RadiotapScanner
+
+# Build rule for target.
+RadiotapScanner: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 RadiotapScanner
+.PHONY : RadiotapScanner
+
+# fast build rule for target.
+RadiotapScanner/fast:
+	$(MAKE) -f CMakeFiles/RadiotapScanner.dir/build.make CMakeFiles/RadiotapScanner.dir/build
+.PHONY : RadiotapScanner/fast
 
 ArpScanner.o: ArpScanner.cpp.o
 
@@ -274,6 +287,33 @@ Device.s: Device.cpp.s
 Device.cpp.s:
 	$(MAKE) -f CMakeFiles/Device.dir/build.make CMakeFiles/Device.dir/Device.cpp.s
 .PHONY : Device.cpp.s
+
+Pinger.o: Pinger.cpp.o
+
+.PHONY : Pinger.o
+
+# target to build an object file
+Pinger.cpp.o:
+	$(MAKE) -f CMakeFiles/Pinger.dir/build.make CMakeFiles/Pinger.dir/Pinger.cpp.o
+.PHONY : Pinger.cpp.o
+
+Pinger.i: Pinger.cpp.i
+
+.PHONY : Pinger.i
+
+# target to preprocess a source file
+Pinger.cpp.i:
+	$(MAKE) -f CMakeFiles/Pinger.dir/build.make CMakeFiles/Pinger.dir/Pinger.cpp.i
+.PHONY : Pinger.cpp.i
+
+Pinger.s: Pinger.cpp.s
+
+.PHONY : Pinger.s
+
+# target to generate assembly for a file
+Pinger.cpp.s:
+	$(MAKE) -f CMakeFiles/Pinger.dir/build.make CMakeFiles/Pinger.dir/Pinger.cpp.s
+.PHONY : Pinger.cpp.s
 
 RadiotapScanner.o: RadiotapScanner.cpp.o
 
@@ -362,23 +402,27 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
+	@echo "... install/strip"
 	@echo "... install/local"
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
-	@echo "... pcap_radiotap"
-	@echo "... RadiotapScanner"
-	@echo "... install/strip"
-	@echo "... install"
-	@echo "... Device"
 	@echo "... ArpScanner"
+	@echo "... pcap_radiotap"
+	@echo "... Device"
 	@echo "... edit_cache"
 	@echo "... radiotap"
+	@echo "... Pinger"
+	@echo "... RadiotapScanner"
+	@echo "... install"
 	@echo "... ArpScanner.o"
 	@echo "... ArpScanner.i"
 	@echo "... ArpScanner.s"
 	@echo "... Device.o"
 	@echo "... Device.i"
 	@echo "... Device.s"
+	@echo "... Pinger.o"
+	@echo "... Pinger.i"
+	@echo "... Pinger.s"
 	@echo "... RadiotapScanner.o"
 	@echo "... RadiotapScanner.i"
 	@echo "... RadiotapScanner.s"
@@ -401,4 +445,3 @@ help:
 cmake_check_build_system:
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
-

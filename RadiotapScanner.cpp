@@ -1,5 +1,5 @@
 #include "RadiotapScanner.h"
-
+#include <time.h>
 using namespace std;
 
 template<typename TInputIter>
@@ -44,7 +44,7 @@ int ieee80211_mhz_to_chan(unsigned int freq) {
     return -1;
 }
 
-static void print_radiotap_namespace(struct ieee80211_radiotap_iterator *iter){
+static void print_radiotap_namespace(struct ieee80211_radiotap_iterator *iter,struct signal_power *power){
 	switch (iter->this_arg_index) {
 	case IEEE80211_RADIOTAP_TSFT:
 		printf("\tTSFT : %llu\n", le64toh(*(unsigned long long *)iter->this_arg));
@@ -59,13 +59,17 @@ static void print_radiotap_namespace(struct ieee80211_radiotap_iterator *iter){
         //Funziona, vedere little/big endian
         printf("\tChannel : %d\n",ieee80211_mhz_to_chan(le16toh(*(unsigned int *) iter->this_arg)));
         printf("\tChannel Frequency : %u\n", le16toh(*(unsigned int *)iter->this_arg));
+        power->channel=ieee80211_mhz_to_chan(le16toh(*(unsigned int *) iter->this_arg));
         break;
 	case IEEE80211_RADIOTAP_FHSS:
 	case IEEE80211_RADIOTAP_DBM_ANTSIGNAL:
+  //Qui
+        power->antenna_signal=*iter->this_arg;
         printf("\tSignal : %d\n",(signed char) *iter->this_arg);
         break;
 
 	case IEEE80211_RADIOTAP_DBM_ANTNOISE:
+        power->antenna_noise=*iter->this_arg;
         printf("\tNoise : %d\n", (signed char)*iter->this_arg);
         break;
 
@@ -105,7 +109,7 @@ static void print_radiotap_namespace(struct ieee80211_radiotap_iterator *iter){
 
 void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *packet){
     struct ieee80211_radiotap_iterator iter;
-
+    struct signal_power power;
     static int count = 1;
     int i;
     cout << ("Pacchetto : ") << count << endl;
@@ -137,15 +141,21 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
 			}
 			printf("\n");
 		} else if (iter.is_radiotap_ns)
-			print_radiotap_namespace(&iter);
-//		else if (iter.current_namespace == &vns_array[0])
+			print_radiotap_namespace(&iter,&power);
+      //		else if (iter.current_namespace == &vns_array[0])
 //			print_test_namespace(&iter);
 	}
-
 	if (err != -ENOENT) {
 		printf("Radiotap malformato\n");
 		return ;
 	}
+    time(&power.timestamp);
+    std::cout << "Prova " << power.antenna_signal << power.antenna_noise  << power.timestamp<< std::endl;
+    printf("\tSignal : %d\n",(signed char) power.antenna_signal);
+    printf("\Noise : %d\n",(signed char) power.antenna_noise);
+
+    std::cout << "Dopo prova";
+
     struct ieee80211_radiotap_header *radiotapheader;
     radiotapheader = (ieee80211_radiotap_header*) packet;
     printf("Radiotap header len %u\n", radiotapheader->it_len);
@@ -215,12 +225,14 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
                 std::cout << "Trovato,setto beacon";
                 if(!search->second->isAP){
                     search->second->setAP(bframe->length,bframe->ssid);
+                    search->second->addPowerValues(power);
                 }
             }
             else{
                 std::cout << "Non trovato, aggiungo beacon";
                 Device* d = new Device(transmitter_mac);
                 d->setAP(bframe->length,bframe->ssid);
+                d->addPowerValues(power);
             //    std::string s(d->mac_address, d->mac_address+6);
                 devices.insert({transmitter_mac,d});
             }
@@ -309,6 +321,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
         if(search2 == devices.end()){
             if(isValidMAC(receiver_mac)){
                 Device *d = new Device(receiver_mac);
+                d->addPowerValues(power);
                 devices.insert({receiver_mac,d});
             }
            // Device *d = new Device(frame->receiver);
@@ -328,6 +341,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
         if(!search2->second->isTalking(transmitter_mac)){
             search->second->addTalker(receiver_mac);
             search2->second->addTalker(transmitter_mac);
+            search2->second->addPowerValues(power);
         }
 
 
@@ -385,6 +399,8 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
          if(search2 == devices.end()){
              if(isValidMAC(receiver_mac)){
           Device *d = new Device(receiver_mac);
+          d->addPowerValues(power);
+
           devices.insert({receiver_mac,d});
              }
              //   Device *d = new Device(frame->receiver);
@@ -407,6 +423,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
         if(!search2->second->isTalking(transmitter_mac)){
              search->second->addTalker(receiver_mac);
              search2->second->addTalker(transmitter_mac);
+             search2->second->addPowerValues(power);
         }
         if(!search3->second->isTalking(transmitter_mac)){
             search->second->addTalker(destination_mac);
@@ -474,7 +491,7 @@ RadiotapScanner::RadiotapScanner(char *arg){
       printf("Packet # %i\n", ++packetCount);
       dissectpacket(NULL,header,data);
   }
-
+/*
   printf("Stampa finale\n");
   printf("Size :%lu\n", devices.size());
       for( const auto& n : devices ) {
@@ -482,8 +499,7 @@ RadiotapScanner::RadiotapScanner(char *arg){
       std::cout << "Key:[" << n.first << "]" << std::endl;
       n.second->Print();
       std::cout << "=====================================" << std::endl;
-
-  }
+  }*/
 }
 void RadiotapScanner::startScan(){
   pcap_loop(handle,NPACKETS,dissectpacket,NULL);
@@ -493,5 +509,8 @@ void RadiotapScanner::close(){
   pcap_set_promisc(handle,0);
   pcap_freecode(&fp);
   pcap_close(handle);
+}
 
+std::unordered_map<std::string,Device*> RadiotapScanner::getResult(){
+  return devices;
 }

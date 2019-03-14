@@ -7,10 +7,9 @@
 #include "ArpScanner.h"
 
 void pcap_cb(u_char *u, const struct pcap_pkthdr *hdr, const u_char *pkt){
-  std::cout << "Dentro pcap_cb" << std::endl;
   struct ether_arp *ether_arp;
-  u_char eth_str[19];
-  u_char ip_str[17];
+  char eth_str[19];
+  char ip_str[17];
   uint32_t ip;
 
   ether_arp = (struct ether_arp *)(pkt + sizeof(struct eth_hdr));
@@ -23,7 +22,7 @@ void pcap_cb(u_char *u, const struct pcap_pkthdr *hdr, const u_char *pkt){
   ip = *(uint32_t *)ether_arp->arp_ethip.ar_spa;
   ip = ntohl(ip);
   if (ip < ip_lo || ip > ip_hi){
-        std::cout<< "Out of range" << std::endl;
+        std::cout<< "Fuori range" << std::endl;
         return;
   }
 
@@ -38,6 +37,16 @@ void pcap_cb(u_char *u, const struct pcap_pkthdr *hdr, const u_char *pkt){
       ether_arp->arp_ethip.ar_spa[2], ether_arp->arp_ethip.ar_spa[3]);
 
   printf("%-15s e' a %s\n", ip_str, eth_str);
+
+  std::string mac;
+  mac.assign(eth_str);
+  std::string ip_given;
+  ip_given.assign(ip_str);
+  std::cout << "Prova MAC " << mac << "Prova IP " << ip_given << std::endl;
+  auto search = devices_found.find(mac);
+  if(search==devices_found.end()){
+    devices_found.insert({mac,ip_given});
+  }
 }
 
   //Implementare fallimenti costruttore
@@ -88,7 +97,7 @@ pcap_t * ArpScanner::init_pcap(char *device){
   char errbuf[PCAP_ERRBUF_SIZE];
   struct bpf_program bpf;
   pcap_t *pcap;
-  int flags;
+  //int flags;
   char filter[1024];
 
     //Provare con 5ms la openlive e 128 snapshot
@@ -105,11 +114,11 @@ pcap_t * ArpScanner::init_pcap(char *device){
 
   if(pcap_compile(pcap, &bpf, filter, 1, 0) < 0){
   	pcap_close(pcap);
-  	errx(1, "failed to compile pcap filter");
+    std::cout << "Errore compilazione filtro " << std::endl;
   }
   if(pcap_setfilter(pcap, &bpf) < 0) {
   	pcap_close(pcap);
-  	errx(1, "failed to set pcap filter");
+    std::cout << "Errore set filtro" << std::endl;
   }
   //Controllare se funzione cosi il setnonblock
   pcap_setnonblock(pcap,1,errbuf);
@@ -118,10 +127,10 @@ pcap_t * ArpScanner::init_pcap(char *device){
 
 void ArpScanner::send_arp(eth_t *eth, uint32_t ip){
   u_char pkt[sizeof(struct eth_hdr) + sizeof(struct ether_arp)];
-  struct eth_hdr *ether;
+  //struct eth_hdr *ether;
   struct ether_arp *arp;
-  char *buf;
-  int rc;
+  //char *buf;
+  //int rc;
 
   memset(pkt, 0, sizeof(pkt));
   memcpy(pkt, &eth_header, sizeof(eth_header));
@@ -165,6 +174,10 @@ void ArpScanner::startScan(){
         sleep(1);
       }
     }
+}
+
+std::unordered_map<std::string,std::string> ArpScanner::getResults(){
+  return devices_found;
 }
 
 void ArpScanner::close(){

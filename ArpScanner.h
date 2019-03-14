@@ -1,3 +1,5 @@
+#include <unordered_map>
+#include <string>
 extern "C"{
   #include <pcap.h>
   #include <sys/types.h>
@@ -24,6 +26,8 @@ uint8_t my_ethaddr[6];
 uint32_t ip_lo;
 uint32_t ip_hi;
 
+std::unordered_map<std::string, std::string> devices_found;
+
 void pcap_cb(u_char *u, const struct pcap_pkthdr *hdr, const u_char *pkt);
 
 class ArpScanner{
@@ -42,6 +46,7 @@ class ArpScanner{
     pcap_t * init_pcap(char *device);
     void send_arp(eth_t *eth, uint32_t ip);
     void startScan();
+    std::unordered_map<std::string, std::string> getResults();
     void close();
 
 };

@@ -17,13 +17,12 @@ extern "C"{
     #endif
 }
 
-std::unordered_map<std::string,Device*> devices;
+//std::unordered_map<std::string,Device*> devices;
 
 
 #define NPACKETS 10
 #define SIZERADIOTAP 25
 #define SIZEBEACONFRAME 4
-//Frequency
 
 typedef struct freq_cvt_s {
     unsigned int fmin;         /* Frequenza mimina in MHz */
@@ -32,7 +31,7 @@ typedef struct freq_cvt_s {
     bool is_bg;                /* B/G channel */
 } freq_cvt_t;
 
-#define FREQ_STEP 5     
+#define FREQ_STEP 5
 
 static freq_cvt_t freq_cvt[] = {
     { 2412, 2472,   1, true },
@@ -44,8 +43,7 @@ static freq_cvt_t freq_cvt[] = {
 #define NUM_FREQ_CVT (sizeof(freq_cvt) / sizeof(freq_cvt_t))
 #define MAX_CHANNEL(fc) ( (gint) ((fc.fmax - fc.fmin) / FREQ_STEP) + fc.cmin )
 
-//
-//
+
 struct mac_addr {
    u_int8_t bytes[6];
 };
@@ -146,7 +144,6 @@ class RadiotapScanner{
   public:
     char *device, errbuf[PCAP_ERRBUF_SIZE];
     pcap_t *handle;
-    //char filter[]="type mgt or type ctl or type data";
     struct bpf_program fp;
     bpf_u_int32 mask;
     bpf_u_int32 network;
@@ -154,4 +151,5 @@ class RadiotapScanner{
     RadiotapScanner(char *arg);
     void startScan();
     void close();
+    std::unordered_map<std::string,Device*> getResult();
 };
