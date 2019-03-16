@@ -335,6 +335,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               devices.insert({receiver_mac,d});
             }
             search = devices.find(transmitter_mac);
+            search2 = devices.find(receiver_mac);
             if(!search->second->isTalking(receiver_mac)){
               search->second->addTalker(receiver_mac);
               search2 = devices.find(receiver_mac);
@@ -359,12 +360,42 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
             if(search2 == devices.end()){
               return;
             }
+            search = devices.find(transmitter_mac);
+            search2 = devices.find(destination_mac);
             if(search->second->isTalking(destination_mac)){
               printf("Erano connessi, disassocio");
               search->second->removeTalker(destination_mac);
               search2->second->removeTalker(transmitter_mac);
             }
             return;
+        }
+
+        if(ctl->subtype == 12){
+
+          printf("Deautenticazione\n");
+          //Riutilizzo control frame
+          struct control_frames *frame;
+          frame = (control_frames *) (packet + radiotapheader->it_len);
+          auto receiver_mac= make_hex_string(std::begin(frame->receiver), std::end(frame->receiver), false,  true);
+          auto transmitter_mac = make_hex_string(std::begin(frame->transmitter), std::end(frame->transmitter), false,  true);
+
+          //Potrei aggiungerli comunque ai devices se non presenti e non metterli come talkers
+          auto search = devices.find(transmitter_mac);
+          if(search == devices.end()){
+            return;
+          }
+          auto search2 = devices.find(receiver_mac);
+          if(search2 == devices.end()){
+            return;
+          }
+          search = devices.find(transmitter_mac);
+          search2 = devices.find(receiver_mac);
+          if(search->second->isTalking(receiver_mac)){
+            printf("Erano connessi, deautenticazione");
+            search->second->removeTalker(receiver_mac);
+            search2->second->removeTalker(transmitter_mac);
+          }
+        return;
         }
     }
     if(ctl->type == 1){
