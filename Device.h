@@ -27,6 +27,7 @@ class Device{
         std::string getDeviceIP();
         bool isTalking(std::string dev_mac);
         void addTalker(std::string dev_mac);
+        void removeTalker(std::string dev_mac);
         void addPowerValues(struct signal_power p);
         signal_power returnPowerValues();
 };

@@ -67,7 +67,7 @@ std::string Device::getDeviceIP(){
 bool Device::isTalking(std::string dev_mac){
   std::cout << "Dentro istalking";
   for(unsigned long i=0; i < talkers.size() ; i++){
-      if(talkers[i]==dev_mac){
+      if(talkers[i].compare(dev_mac)==0){
           return true;
       }
   }
@@ -76,7 +76,18 @@ bool Device::isTalking(std::string dev_mac){
 
 void Device::addTalker(std::string dev_mac){
   std::cout << "Dentro addtalker";
-  talkers.push_back(dev_mac);
+//  if(!(dev_mac==getDeviceMAC())){
+    talkers.push_back(dev_mac);
+//  }
+}
+
+void Device::removeTalker(std::string dev_mac){
+  for(unsigned long i=0; i < talkers.size() ; i++){
+    if(talkers[i].compare(dev_mac)==0){
+      talkers.erase(talkers.begin()+i);
+      return;
+    }
+  }
 }
 
 void Device::addPowerValues(struct signal_power p){

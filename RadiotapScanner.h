@@ -92,6 +92,28 @@ struct beacon_frame{
     char ssid[32];
 };
 
+struct association_frame{
+  u_int16_t framectl;
+  u_int16_t duration;
+  u_int8_t  receiver[6];
+  u_int8_t  transmitter[6];
+  u_int8_t  destination[6]; //SSID
+  u_int16_t seq_control;
+  u_int16_t capability_info;
+  u_int16_t response;
+};
+
+struct disassociation_frame{
+  u_int16_t framectl;
+  u_int16_t duration;
+  u_int8_t  receiver[6];
+  u_int8_t  transmitter[6];
+  u_int8_t  destination[6]; //SSID
+  u_int16_t frag_number;
+  u_int16_t seq_number;
+  u_int32_t framecheck;
+};
+
 //Ignora tutti i tipi di flag dei control frames
 struct control_frames{
     u_int16_t framectl;
