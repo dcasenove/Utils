@@ -204,9 +204,14 @@ class RadiotapScanner{
     struct bpf_program fp;
     bpf_u_int32 mask;
     bpf_u_int32 network;
+    std::vector<std::string> arp;
     RadiotapScanner();
     RadiotapScanner(char *arg);
     void startScan();
+    void packResults();
+    void feedARPResults(std::vector<std::string> arp_r);
     void close();
+    void findMainMACAP(std::string mac);
+    void findGloballyAdministeredInterface(std::string mac);
     std::unordered_map<std::string,Device*> getResult();
 };

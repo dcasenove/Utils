@@ -4,6 +4,7 @@
 Device::Device(std::string mac){
   isAP=false;
   mac_address=mac;
+  isLocallyAdministered=checkLocalAdministered(mac_address);
 }
 
 void Device::setAP(u_int8_t length, char *ssidp){
@@ -29,7 +30,22 @@ void Device::Print(){
 
   std::cout << "Sto parlando con : " << std::endl;
   for(unsigned long i = 0 ; i < talkers.size() ; i++){
-    std::cout << talkers[i] << std::endl;
+    std::cout << talkers[i];
+    auto search = devices.find(talkers[i]);
+    for(auto i : devices){
+      std::cout<< i.first << std::endl;
+    }
+    if(search!=devices.end()){
+      std::cout << search->first << " trovato " << std::endl;
+      if(search->second->isLocallyAdministered){
+        std::cout << "Sono locale" << std::endl;
+        std::cout << "globally administered : "<< search->second->main_device->mac_address;
+      }
+    }
+    else{
+      std::cout << "Non trovato" << std::endl;
+    }
+    std::cout << std::endl;
 /*
     auto search = devices.find(talkers[i]);
     if(search != devices.end()){
@@ -76,9 +92,9 @@ bool Device::isTalking(std::string dev_mac){
 
 void Device::addTalker(std::string dev_mac){
   std::cout << "Dentro addtalker";
-//  if(!(dev_mac==getDeviceMAC())){
+  if(!(dev_mac==getDeviceMAC())){
     talkers.push_back(dev_mac);
-//  }
+  }
 }
 
 void Device::removeTalker(std::string dev_mac){

@@ -12,6 +12,95 @@ uint32_t crc32(uint32_t bytes_sz, const uint8_t *bytes)
    return ~crc;
 }
 
+void RadiotapScanner::findGloballyAdministeredInterface(std::string mac){
+  std::cout << "Dentro find" << std::endl;
+  auto search = devices.find(mac);
+  //devices.erase(search);
+  std::string last_three_octects=mac.substr(9,8);
+  for(auto n : devices){
+    std::cout << "Dentro for find" << std::endl;
+    if(n.first.compare(mac)!=0){
+      std::cout << "ultimi 3 ottetti" << last_three_octects << std::endl;
+      std::size_t s = n.first.find(last_three_octects,9);
+      if((s!=std::string::npos)/*&&(n.first.compare(mac)!=0)*/){
+        std::cout << "Dentro if" << std::endl;
+        n.second->local_assigned_interfaces.push_back(search->second);
+        search->second->main_device=n.second;
+        return;
+      }
+    }
+  }
+  for(auto n : arp){
+    std::cout << "Cerco nei risultati arp scan" << std::endl;
+    if(n.compare(mac)!=0){
+      std::cout << "ultimi 3 ottetti" << last_three_octects << std::endl;
+      std::size_t s = n.find(last_three_octects,9);
+      if((s!=std::string::npos)){
+        std::cout << "Dentro if controllo arp" << std::endl;
+        auto search2 = devices.find(n);
+        if(search2==devices.end()){
+          Device *d = new Device(n);
+          devices.insert({n,d});
+        }
+        std::cout << "Dopo if creazione" << std::endl;
+        search2 = devices.find(n);
+        search2->second->local_assigned_interfaces.push_back(search->second);
+        search->second->main_device=search2->second;
+      }
+    }
+  }
+  //Risultati arp scan
+}
+
+  void RadiotapScanner::findMainMACAP(std::string mac){
+    std::string first_five_octects=mac.substr(0,15);
+    std::cout << "Primi cinque ottetti" << first_five_octects << std::endl;
+    vector<std::string> found;
+    found.push_back(mac);
+    for(auto n : devices){
+      std::size_t s = n.first.find(first_five_octects,0);
+      if((s!=std::string::npos)){
+        found.push_back(n.first);
+      }
+    }
+    for(auto n : arp){
+      std::size_t s = n.find(first_five_octects,0);
+      if((s!=std::string::npos)){
+        auto search = devices.find(n);
+        if(search==devices.end()){
+          Device *d = new Device(n);
+          devices.insert({n,d});
+          found.push_back(n);
+        }
+      }
+    }
+    vector<unsigned> min_vector;
+    for(auto str : found){
+      std::cout << "Stringa : " <<  "size : " << str.size() << std::endl;
+      std::string octect6 = str.substr(str.size()-2,2);
+      std::cout << "Ultimo ottetto : " << octect6 << std::endl;
+      std::stringstream ss;
+      ss << std::hex << octect6;
+      unsigned np;
+      ss >> np;
+      std::cout << "NP:" << np << std::endl;
+      min_vector.push_back(np);
+    }
+    int min=0;
+    for(unsigned long i=0; i<min_vector.size(); i++){
+      if(min_vector[i]< min_vector[min]){
+        min=i;
+      }
+    }
+    auto search = devices.find(found[min]);
+    std::cout << "Mac : " << search->first << std::endl;
+    auto toinclude = devices.find(mac);
+    toinclude->second->main_device=search->second;
+    //Controllare assegnamento successivo
+    search->second->local_assigned_interfaces.push_back(toinclude->second);
+  }
+
+
 
 template<typename TInputIter>
 std::string make_hex_string(TInputIter first, TInputIter last, bool use_uppercase = true, bool insert_spaces = false)
@@ -619,6 +708,11 @@ RadiotapScanner::RadiotapScanner(char *arg){
   pcap_t * pcap = pcap_open_offline(file.c_str(), errbuf);
   struct pcap_pkthdr *header;
   const u_char *data;
+
+  //Forza arp del repeater per wifi_repeater.pcap
+  arp.push_back("70:4f:57:2e:2d:66");
+  //
+
   u_int packetCount = 0;
   int returnValue;
       while ((returnValue = pcap_next_ex(pcap, &header, &data) >= 0) /*&& (packetCount<10)*/)
@@ -627,6 +721,8 @@ RadiotapScanner::RadiotapScanner(char *arg){
       printf("Packet # %i\n", ++packetCount);
       dissectpacket(NULL,header,data);
   }
+  std::cout << "Stampa di packResults" << std::endl;
+  packResults();
 /*
   printf("Stampa finale\n");
   printf("Size :%lu\n", devices.size());
@@ -637,6 +733,41 @@ RadiotapScanner::RadiotapScanner(char *arg){
       std::cout << "=====================================" << std::endl;
   }*/
 }
+
+void RadiotapScanner::packResults(){
+  std::vector<Device *> ap;
+  for( const auto& n : devices ) {
+    if(n.second->isAP){
+      ap.push_back(n.second);
+    }
+  }
+  for(const auto n : ap){
+    std::cout << n->getDeviceMAC() << " " << n->getDeviceSSID() << std::endl;
+    std::string mac = n->getDeviceMAC();
+    checkLocalAdministered(mac);
+/*
+    for(auto v : n->talkers){
+      //std::cout << v.getDeviceMAC() << " " << v.getDeviceSSID() << std::endl;
+      std::string mac = v;
+      checkLocalAdministered(mac);
+  }*/
+}
+  for(const auto i : devices){
+    if(i.second->isLocallyAdministered){
+          findGloballyAdministeredInterface(i.second->mac_address);
+        }
+  }
+
+  for( const auto n : ap ){
+    findMainMACAP(n->getDeviceMAC());
+  }
+/*
+  for( const auto n : devices ){
+    findMainMACAP(n.second->getDeviceMAC());
+  }*/
+
+}
+
 void RadiotapScanner::startScan(){
   pcap_loop(handle,NPACKETS,dissectpacket,NULL);
 }
@@ -645,6 +776,10 @@ void RadiotapScanner::close(){
   pcap_set_promisc(handle,0);
   pcap_freecode(&fp);
   pcap_close(handle);
+}
+
+void RadiotapScanner::feedARPResults(vector<std::string> arp_r){
+  arp=arp_r;
 }
 
 std::unordered_map<std::string,Device*> RadiotapScanner::getResult(){
