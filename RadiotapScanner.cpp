@@ -357,6 +357,10 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
                     search->second->setAP(bframe->length,bframe->ssid);
                     search->second->addPowerValues(power);
                 }
+              //  else{
+            //      search->second->setAP(bframe->length,bframe->ssid);
+            //    }
+                //Controllo cambio ssid
             }
             else{
                 std::cout << "Non trovato, aggiungo beacon";
@@ -732,6 +736,7 @@ RadiotapScanner::RadiotapScanner(char *arg){
       n.second->Print();
       std::cout << "=====================================" << std::endl;
   }*/
+  pcap_close(pcap);
 }
 
 void RadiotapScanner::packResults(){
@@ -772,10 +777,13 @@ void RadiotapScanner::startScan(){
   pcap_loop(handle,NPACKETS,dissectpacket,NULL);
 }
 void RadiotapScanner::close(){
-  pcap_set_rfmon(handle,0);
-  pcap_set_promisc(handle,0);
-  pcap_freecode(&fp);
-  pcap_close(handle);
+//  pcap_set_rfmon(handle,0);
+//  pcap_set_promisc(handle,0);
+//  pcap_freecode(&fp);
+//  pcap_close(handle);
+  for(const auto n : devices){
+    delete(n.second);
+  }
 }
 
 void RadiotapScanner::feedARPResults(vector<std::string> arp_r){

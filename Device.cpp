@@ -7,10 +7,15 @@ Device::Device(std::string mac){
   isLocallyAdministered=checkLocalAdministered(mac_address);
 }
 
+Device::~Device(){
+  delete(ssid);
+}
+
 void Device::setAP(u_int8_t length, char *ssidp){
   isAP=true;
   ssid = new char[length];
   memcpy(ssid,ssidp,length);
+  //free(ssidp);
 }
 
 void Device::setIP(std::string ip){

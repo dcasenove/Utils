@@ -46,6 +46,7 @@ class Device{
         struct signal_power power;
 
         Device(std::string mac);
+        ~Device();
         void setAP(u_int8_t ,char * ssid);
         void setIP(std::string ip);
         void Print();
