@@ -4,6 +4,7 @@
 Device::Device(std::string mac){
   isAP=false;
   mac_address=mac;
+  main_device=NULL;
   isLocallyAdministered=checkLocalAdministered(mac_address);
 }
 

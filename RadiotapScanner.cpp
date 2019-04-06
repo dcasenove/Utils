@@ -270,7 +270,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
 		return ;
 	}
     time(&power.timestamp);
-    std::cout << "Prova " << power.antenna_signal << power.antenna_noise  << power.timestamp<< std::endl;
+  //  std::cout << "Prova " << power.antenna_signal << power.antenna_noise  << power.timestamp<< std::endl;
     //printf("\tSignal : %d\n",(signed char) power.antenna_signal);
     //printf("Noise : %d\n",(signed char) power.antenna_noise);
 
