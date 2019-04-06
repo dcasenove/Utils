@@ -166,30 +166,30 @@ int ieee80211_mhz_to_chan(unsigned int freq) {
 static void print_radiotap_namespace(struct ieee80211_radiotap_iterator *iter,struct signal_power *power){
 	switch (iter->this_arg_index) {
 	case IEEE80211_RADIOTAP_TSFT:
-		printf("\tTSFT : %llu\n", le64toh(*(unsigned long long *)iter->this_arg));
+		//printf("\tTSFT : %llu\n", le64toh(*(unsigned long long *)iter->this_arg));
 		break;
 	case IEEE80211_RADIOTAP_FLAGS:
-		printf("\tFlags : %02x\n", *iter->this_arg);
+	//	printf("\tFlags : %02x\n", *iter->this_arg);
 		break;
 	case IEEE80211_RADIOTAP_RATE:
-		printf("\tRate : %lf\n", (double)*iter->this_arg/2);
+	//	printf("\tRate : %lf\n", (double)*iter->this_arg/2);
 		break;
 	case IEEE80211_RADIOTAP_CHANNEL:
         //Funziona, vedere little/big endian
-        printf("\tChannel : %d\n",ieee80211_mhz_to_chan(le16toh(*(unsigned int *) iter->this_arg)));
-        printf("\tChannel Frequency : %u\n", le16toh(*(unsigned int *)iter->this_arg));
+    //    printf("\tChannel : %d\n",ieee80211_mhz_to_chan(le16toh(*(unsigned int *) iter->this_arg)));
+    //    printf("\tChannel Frequency : %u\n", le16toh(*(unsigned int *)iter->this_arg));
         power->channel=ieee80211_mhz_to_chan(le16toh(*(unsigned int *) iter->this_arg));
         break;
 	case IEEE80211_RADIOTAP_FHSS:
 	case IEEE80211_RADIOTAP_DBM_ANTSIGNAL:
   //Qui
         power->antenna_signal=*iter->this_arg;
-        printf("\tSignal : %d\n",(signed char) *iter->this_arg);
+    //    printf("\tSignal : %d\n",(signed char) *iter->this_arg);
         break;
 
 	case IEEE80211_RADIOTAP_DBM_ANTNOISE:
         power->antenna_noise=*iter->this_arg;
-        printf("\tNoise : %d\n", (signed char)*iter->this_arg);
+    //    printf("\tNoise : %d\n", (signed char)*iter->this_arg);
         break;
 
 	case IEEE80211_RADIOTAP_LOCK_QUALITY:
@@ -197,25 +197,25 @@ static void print_radiotap_namespace(struct ieee80211_radiotap_iterator *iter,st
 	case IEEE80211_RADIOTAP_DB_TX_ATTENUATION:
 	case IEEE80211_RADIOTAP_DBM_TX_POWER:
 	case IEEE80211_RADIOTAP_ANTENNA:
-        printf("\tAntenna : %d\n",(signed char) *iter->this_arg);
+    //    printf("\tAntenna : %d\n",(signed char) *iter->this_arg);
         break;
 
 	case IEEE80211_RADIOTAP_DB_ANTSIGNAL:
-        printf("\tSignal : %d\n",(signed char) *iter->this_arg);
+      //  printf("\tSignal : %d\n",(signed char) *iter->this_arg);
         break;
 	case IEEE80211_RADIOTAP_DB_ANTNOISE:
-        printf("\tNoise : %d\n", (signed char)*iter->this_arg);
+    //    printf("\tNoise : %d\n", (signed char)*iter->this_arg);
         break;
 	case IEEE80211_RADIOTAP_TX_FLAGS:
 		break;
 	case IEEE80211_RADIOTAP_RX_FLAGS:
-		if (fcshdr) {
-			printf("\tFCS in header : %.8x\n",
-				le32toh(*(uint32_t *)iter->this_arg));
-			break;
-		}
-		printf("\tRX flags : %#.4x\n",
-			le16toh(*(uint16_t *)iter->this_arg));
+//		if (fcshdr) {
+	//		printf("\tFCS in header : %.8x\n",
+	//			le32toh(*(uint32_t *)iter->this_arg));
+	//		break;
+	//	}
+//		printf("\tRX flags : %#.4x\n",
+//			le16toh(*(uint16_t *)iter->this_arg));
 		break;
 	case IEEE80211_RADIOTAP_RTS_RETRIES:
 	case IEEE80211_RADIOTAP_DATA_RETRIES:
@@ -271,8 +271,8 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
 	}
     time(&power.timestamp);
     std::cout << "Prova " << power.antenna_signal << power.antenna_noise  << power.timestamp<< std::endl;
-    printf("\tSignal : %d\n",(signed char) power.antenna_signal);
-    printf("Noise : %d\n",(signed char) power.antenna_noise);
+    //printf("\tSignal : %d\n",(signed char) power.antenna_signal);
+    //printf("Noise : %d\n",(signed char) power.antenna_noise);
 
     std::cout << "Dopo prova";
 
