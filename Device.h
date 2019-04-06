@@ -65,4 +65,4 @@ class Device{
 };
 
 //Mossa da RadiotapScanner.h
-std::unordered_map<std::string,Device*> devices;
+//std::unordered_map<std::string,Device*> devices;

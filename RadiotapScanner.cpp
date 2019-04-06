@@ -2,6 +2,8 @@
 #include <time.h>
 using namespace std;
 
+std::unordered_map<std::string,Device*> devices;
+
 uint32_t crc32(uint32_t bytes_sz, const uint8_t *bytes)
 {
    uint32_t crc = ~0;

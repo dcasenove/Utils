@@ -40,8 +40,8 @@ void Device::Print(){
       printf("\tSignal : %d\n",(signed char) power.antenna_signal);
       printf("\tNoise : %d\n",(signed char) power.antenna_noise);
       printf("\tChannel : %d\n", power.channel);
-
-  std::cout << "Sto parlando con : " << std::endl;
+/*
+    std::cout << "Sto parlando con : " << std::endl;
   for(unsigned long i = 0 ; i < talkers.size() ; i++){
     std::cout << talkers[i];
     auto search = devices.find(talkers[i]);
@@ -58,7 +58,7 @@ void Device::Print(){
     else{
       std::cout << "Non trovato" << std::endl;
     }
-    std::cout << std::endl;
+    std::cout << std::endl; */
 /*
     auto search = devices.find(talkers[i]);
     if(search != devices.end()){
@@ -73,7 +73,7 @@ void Device::Print(){
   std::cout << "******************************************" << std::endl;
 
 }
-}/*
+/*
   else{
     std::cout << "Device con Mac Address: " << mac_address;
     printf("\t Signal : %d",(signed char) power.antenna_signal);
