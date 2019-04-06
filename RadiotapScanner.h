@@ -10,8 +10,8 @@ extern "C"{
     #include <pcap.h>
     #include <string.h>
     #include "radiotap_iter.h"
-    #include <machine/endian.h>
     #if defined(__APPLE__)
+    #include <machine/endian.h>
     #else
     #include <endian.h>
     #endif
