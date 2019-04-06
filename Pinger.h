@@ -11,6 +11,7 @@ extern "C"{
   #include <fcntl.h>
   #include <unistd.h>
   #include <netdb.h>
+  #include <signal.h>
 }
 
 typedef struct {
