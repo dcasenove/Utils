@@ -22,7 +22,7 @@ void RadiotapScanner::findGloballyAdministeredInterface(std::string mac){
     if(n.first.compare(mac)!=0){
       std::cout << "ultimi 3 ottetti" << last_three_octects << std::endl;
       std::size_t s = n.first.find(last_three_octects,9);
-      if((s!=std::string::npos)/*&&(n.first.compare(mac)!=0)*/){
+      if((s!=std::string::npos)){//&&(n.first.compare(mac)!=0)
         std::cout << "Dentro if" << std::endl;
         n.second->local_assigned_interfaces.push_back(search->second);
         search->second->main_device=n.second;
@@ -353,10 +353,10 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
            // auto search = devices.find(bframe->transmitter);
             if(search!=devices.end()){
                 std::cout << "Trovato,setto beacon";
-                if(!search->second->isAP){
-                    search->second->setAP(bframe->length,bframe->ssid);
+              //  if(!search->second->isAP){
+                    search->second->setAP(std::string(bframe->ssid));
                     search->second->addPowerValues(power);
-                }
+                //}
               //  else{
             //      search->second->setAP(bframe->length,bframe->ssid);
             //    }
@@ -365,7 +365,8 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
             else{
                 std::cout << "Non trovato, aggiungo beacon";
                 Device* d = new Device(transmitter_mac);
-                d->setAP(bframe->length,bframe->ssid);
+              //  d->setAP(bframe->length,bframe->ssid);
+                d->setAP(std::string(bframe->ssid));
                 d->addPowerValues(power);
             //    std::string s(d->mac_address, d->mac_address+6);
                 devices.insert({transmitter_mac,d});

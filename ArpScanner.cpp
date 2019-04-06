@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <iomanip>
 #include <sstream>
+#include <cstring>
 #include "ArpScanner.h"
 
 void pcap_cb(u_char *u, const struct pcap_pkthdr *hdr, const u_char *pkt){

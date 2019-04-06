@@ -126,6 +126,6 @@ int main(int argc, char *argv[]){
       }
   }
   scanner2->close();
-  free(scanner2);
+  delete(scanner2);
 }
 }

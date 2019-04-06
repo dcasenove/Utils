@@ -150,7 +150,7 @@ static const struct radiotap_align_size align_size_000000_00[] = {
 
 static const struct ieee80211_radiotap_namespace vns_array[] = {
 	{
-		.oui = 0x000000,
+    .oui = 0x000000,
 		.subns = 0,
 		.n_bits = sizeof(align_size_000000_00),
 		.align_size = align_size_000000_00,
@@ -158,8 +158,8 @@ static const struct ieee80211_radiotap_namespace vns_array[] = {
 };
 
 static const struct ieee80211_radiotap_vendor_namespaces vns = {
-	.ns = vns_array,
-	.n_ns = sizeof(vns_array)/sizeof(vns_array[0]),
+    .ns = vns_array,
+	  .n_ns = sizeof(vns_array)/sizeof(vns_array[0]),
 };
 
 const uint32_t crctable[] = {

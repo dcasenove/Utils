@@ -8,14 +8,22 @@ Device::Device(std::string mac){
 }
 
 Device::~Device(){
-  delete(ssid);
+  //Cambiare ssid stringa
+  //  if(ssid!=NULL){
+  //    delete[](ssid);
+  //  }
 }
 
-void Device::setAP(u_int8_t length, char *ssidp){
+void Device::setAP(std::string ssidp){
   isAP=true;
-  ssid = new char[length];
-  memcpy(ssid,ssidp,length);
+  //ssid = new char[length+1];
+  //memcpy(ssid,ssidp,length);
+  //ssid[length]='\0';
   //free(ssidp);
+  //ssid = std::string(ssidp);
+  if(ssid!=ssidp){
+    ssid=ssidp;
+  }
 }
 
 void Device::setIP(std::string ip){
@@ -76,11 +84,15 @@ void Device::Print(){
 std::string Device::getDeviceMAC(){
   return mac_address;
 }
-
+/*
 char * Device::getDeviceSSID(){
   return ssid;
-}
+}*/
 
+std::string Device::getDeviceSSID(){
+    return ssid;
+
+}
 std::string Device::getDeviceIP(){
   return ip_address;
 }

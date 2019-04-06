@@ -3,7 +3,8 @@
 #include <unordered_map>
 #include <iostream>
 #include <sstream>
-
+#include <cstring>
+#include <bitset>
 struct signal_power{
   time_t timestamp;
   int channel;
@@ -37,7 +38,8 @@ class Device{
     public:
         bool isAP;
         bool isLocallyAdministered;
-        char *ssid;
+       // char *ssid;
+        std::string ssid;
         std::string mac_address;
         std::string ip_address;
         std::vector<std::string> talkers;
@@ -47,11 +49,12 @@ class Device{
 
         Device(std::string mac);
         ~Device();
-        void setAP(u_int8_t ,char * ssid);
+        void setAP(std::string ssid);
         void setIP(std::string ip);
         void Print();
         std::string getDeviceMAC();
-        char *getDeviceSSID();
+        //char *getDeviceSSID();
+        std::string getDeviceSSID();
         std::string getDeviceIP();
         bool isTalking(std::string dev_mac);
         void addTalker(std::string dev_mac);
