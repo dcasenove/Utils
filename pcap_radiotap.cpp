@@ -41,7 +41,13 @@ int main(int argc, char *argv[]){
   //  bpf_u_int32 network;
 
   if(argc==1){
-    RadiotapScanner *scanner = new RadiotapScanner();
+    RadiotapScanner *scanner;
+    try{
+      scanner = new RadiotapScanner();
+    }catch(std::invalid_argument& e){
+      delete(scanner);
+      return 1;
+    }
     scanner->startScan(5);
     std::unordered_map<std::string, Device*> r = scanner->getResult();
     for(auto i : r){
