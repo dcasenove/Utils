@@ -239,7 +239,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
     int err;
 
 
-    err=ieee80211_radiotap_iterator_init(&iter, (ieee80211_radiotap_header*)packet, header->len, &vns);
+    err=ieee80211_radiotap_iterator_init(&iter, (ieee80211_radiotap_header*)packet, header->len,/* &vns*/ NULL);
     if(err){
         cout << ("Malformed header") << endl;
         return;
@@ -248,7 +248,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
     printf("===RADIOTAP HEADER===\n");
     	while (!(err = ieee80211_radiotap_iterator_next(&iter))) {
 		if (iter.this_arg_index == IEEE80211_RADIOTAP_VENDOR_NAMESPACE) {
-			printf("\tvendor NS (%.2x-%.2x-%.2x:%d, %d bytes)\n",
+	/*		printf("\tvendor NS (%.2x-%.2x-%.2x:%d, %d bytes)\n",
 				iter.this_arg[0], iter.this_arg[1],
 				iter.this_arg[2], iter.this_arg[3],
 				iter.this_arg_size - 6);
@@ -259,7 +259,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
 					printf(" ");
 				printf("%.2x", iter.this_arg[i]);
 			}
-			printf("\n");
+			printf("\n");*/
 		} else if (iter.is_radiotap_ns)
 			print_radiotap_namespace(&iter,&power);
       //		else if (iter.current_namespace == &vns_array[0])
