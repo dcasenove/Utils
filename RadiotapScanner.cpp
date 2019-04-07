@@ -569,6 +569,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
 RadiotapScanner::RadiotapScanner(){
   //Lookup device
   radiotap_scanner=this;
+  //Errori valgrind dovuti a pcap_lookupdev 
   device = pcap_lookupdev(errbuf);
   if(device == NULL){
       throw std::invalid_argument("Device di rete non trovato\n");

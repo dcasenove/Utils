@@ -45,8 +45,7 @@ int main(int argc, char *argv[]){
     try{
       scanner = new RadiotapScanner();
     }catch(std::invalid_argument& e){
-      std::cout << "Catch" << std::endl;
-      delete(scanner);
+      std::cout << "Catch " << std::endl;
       return 1;
     }
     scanner->startScan(5);
