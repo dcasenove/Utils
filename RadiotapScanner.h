@@ -11,6 +11,7 @@ extern "C"{
     #include <pcap.h>
     #include <string.h>
     #include <unistd.h>
+    #include <signal.h>
     #include "radiotap_iter.h"
     #if defined(__APPLE__)
     #include <machine/endian.h>
