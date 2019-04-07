@@ -5,6 +5,7 @@
 #include <sstream>
 #include <cstring>
 #include <bitset>
+
 struct signal_power{
   time_t timestamp;
   int channel;
@@ -38,7 +39,6 @@ class Device{
     public:
         bool isAP;
         bool isLocallyAdministered;
-       // char *ssid;
         std::string ssid;
         std::string mac_address;
         std::string ip_address;
@@ -53,7 +53,6 @@ class Device{
         void setIP(std::string ip);
         void Print();
         std::string getDeviceMAC();
-        //char *getDeviceSSID();
         std::string getDeviceSSID();
         std::string getDeviceIP();
         bool isTalking(std::string dev_mac);
@@ -63,6 +62,3 @@ class Device{
         void addLocalInterface(Device* d);
         signal_power returnPowerValues();
 };
-
-//Mossa da RadiotapScanner.h
-//std::unordered_map<std::string,Device*> devices;

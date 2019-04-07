@@ -41,17 +41,67 @@ int main(int argc, char *argv[]){
   //  bpf_u_int32 network;
 
   if(argc==1){
-  /*  RadiotapScanner *scanner = new RadiotapScanner();
-    scanner->startScan();
-    scanner->close();*/
-    ArpScanner *scanner = new ArpScanner();
-    scanner->startScan();
-    std::unordered_map<std::string,std::string> risultato;
-    risultato=scanner->getResults();
-    std::cout << "Stampo risultati arp scan" << std::endl;
-    for (auto i : risultato){
-      std::cout << "MAC : " << i.first << " IP : "<< i.second << std::endl;
-    }
+    RadiotapScanner *scanner = new RadiotapScanner();
+    scanner->startScan(5);
+    std::unordered_map<std::string, Device*> r = scanner->getResult();
+    for(auto i : r){
+      if(i.second->isAP){
+        std::cout << "******************************************" << std::endl;
+          std::cout << "Main Device :" << i.second->main_device->mac_address;
+          std::cout << " AP con Mac Address:" << i.second->mac_address << std::endl;
+          std::cout << "SSID:" << i.second->ssid << std::endl;
+          //std::cout << "Power segment - Signal : " << power.antenna_signal << "Noise : " << power.antenna_noise << "Timestamp: " << power.timestamp;
+          printf("\tSignal : %d\n",(signed char) i.second->power.antenna_signal);
+          printf("\tNoise : %d\n",(signed char) i.second->power.antenna_noise);
+          printf("\tChannel : %d\n", i.second->power.channel);
+
+      std::cout << "Sto parlando con : " << std::endl;
+      for(unsigned long c = 0 ; c < i.second->talkers.size() ; c++){
+        std::cout << i.second->talkers[c];
+        auto search = r.find(i.second->talkers[c]);
+        if(search!=r.end()){
+          if(search->second->isLocallyAdministered){
+            std::cout << " Sono locale";
+            if(search->second->main_device!=NULL){
+            std::cout << " globally administered : "<< search->second->main_device->mac_address;
+          }
+          }
+          else if(search->second->main_device!=NULL){
+            std::cout << "Main device : " << search->second->main_device->mac_address;
+          }
+          //else if(search->second->main_device->getDeviceMAC()!=search->second->mac_address){
+        //    std::cout << "Main device : " << search->second->main_device->mac_address;
+        //  }
+        }
+        else{
+          std::cout << "Non trovato" << std::endl;
+        }
+        std::cout << std::endl;
+    /*
+        auto search = devices.find(talkers[i]);
+        if(search != devices.end()){
+          struct signal_power toprint = search->second->returnPowerValues();
+          printf(" che ha signal : %d\t",(signed char) toprint.antenna_signal);
+          printf(" e noise : %d\n",(signed char) toprint.antenna_noise);
+        }
+        else{
+          std::cout << "Non trovato";
+        }*/
+      }
+      std::cout << "******************************************" << std::endl;
+
+      }
+  }
+    scanner->close();
+    delete(scanner);
+  //  ArpScanner *scanner = new ArpScanner();
+  //  scanner->startScan();
+//    std::unordered_map<std::string,std::string> risultato;
+//    risultato=scanner->getResults();
+//    std::cout << "Stampo risultati arp scan" << std::endl;
+//    for (auto i : risultato){
+//      std::cout << "MAC : " << i.first << " IP : "<< i.second << std::endl;
+//    }
     //std::cout << "Ping 8.8.8.8" << std::endl;
     //Pinger *pinger = new Pinger();
     //pinger->startPing("8.8.8.8");

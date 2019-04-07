@@ -4,11 +4,13 @@
 #include <unordered_map>
 #include <iomanip>
 #include <sstream>
+#include <exception>
 #include "Device.h"
 
 extern "C"{
     #include <pcap.h>
     #include <string.h>
+    #include <unistd.h>
     #include "radiotap_iter.h"
     #if defined(__APPLE__)
     #include <machine/endian.h>
@@ -16,9 +18,6 @@ extern "C"{
     #include <endian.h>
     #endif
 }
-
-//std::unordered_map<std::string,Device*> devices;
-
 
 #define NPACKETS 10
 #define SIZERADIOTAP 25
@@ -209,11 +208,15 @@ class RadiotapScanner{
     std::vector<std::string> arp;
     RadiotapScanner();
     RadiotapScanner(char *arg);
-    void startScan();
+    void startScan(int time);
     void packResults();
     void feedARPResults(std::vector<std::string> arp_r);
     void close();
+    static void alarmHandler(int sig);
+    void stop_pack();
     void findMainMACAP(std::string mac);
     void findGloballyAdministeredInterface(std::string mac);
     std::unordered_map<std::string,Device*> getResult();
 };
+
+static RadiotapScanner* radiotap_scanner;
