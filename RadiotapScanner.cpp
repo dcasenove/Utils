@@ -262,32 +262,34 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
     struct ieee80211mac *frame80211;
     struct framectl_bits *ctl;
 
-    frame80211 = (ieee80211mac *) (packet+radiotapheader->it_len/*SIZERADIOTAP*/);
+    frame80211 = (ieee80211mac *) (packet+radiotapheader->it_len);
     ctl = (framectl_bits *)&frame80211->framectl;
     printf("\tProtocol version : %u\n", ctl->protocol_version);
     printf("\tType : %u\n", ctl->type);
     printf("\tSubtype : %u\n", ctl->subtype);
     printf("\tDuration :%u\n", frame80211->duration);
     printf("===802.11===\n");
-
-    if(ctl->type == 0){
-        printf("\nManagement frame\n");
-        if(ctl->subtype == 8){
+    switch(ctl->type){
+      //Management Frame
+      case 0:
+        switch(ctl->subtype){
+          //Beacon frame
+          case 8:{
             struct beacon_frame *bframe;
             bframe = (beacon_frame *)(packet+radiotapheader->it_len);
             printf("Beacon\n");
             printf("\tReceiver : ");
             printf("%02x:%02x:%02x:%02x:%02x:%02x\n", bframe->receiver[0],bframe->receiver[1],
-                    bframe->receiver[2],bframe->receiver[3],bframe->receiver[4],
-                    bframe->receiver[5]);
+                  bframe->receiver[2],bframe->receiver[3],bframe->receiver[4],
+                  bframe->receiver[5]);
             printf("\tTransmitter : ");
             printf("%02x:%02x:%02x:%02x:%02x:%02x\n", bframe->transmitter[0],bframe->transmitter[1],
-                    bframe->transmitter[2],bframe->transmitter[3],bframe->transmitter[4],
-                    bframe->transmitter[5]);
+                  bframe->transmitter[2],bframe->transmitter[3],bframe->transmitter[4],
+                  bframe->transmitter[5]);
             printf("\tDestination : ");
             printf("%02x:%02x:%02x:%02x:%02x:%02x\n", bframe->destination[0],bframe->destination[1],
-                    bframe->destination[2],bframe->destination[3],bframe->destination[4],
-                    bframe->destination[5]);
+                  bframe->destination[2],bframe->destination[3],bframe->destination[4],
+                  bframe->destination[5]);
             printf("\tSeq control : %u\n", bframe->seq_control);
             printf("\tTimestamp : %llu\n", bframe->timestamp);
             printf("\tBeacon Interval : %u TU\n", bframe->beacon_interval);
@@ -300,52 +302,51 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
             std::cout << "Il risultato della funzione e' : " << transmitter_mac << endl;
             auto search = devices.find(transmitter_mac);
             if(search!=devices.end()){
-                std::cout << "Trovato,setto beacon";
-                    search->second->setAP(std::string(bframe->ssid));
-                    search->second->addPowerValues(power);
+              std::cout << "Trovato,setto beacon";
+              search->second->setAP(std::string(bframe->ssid));
+              search->second->addPowerValues(power);
             }
             else{
-                std::cout << "Non trovato, aggiungo beacon";
-                Device* d = new Device(transmitter_mac);
-                d->setAP(std::string(bframe->ssid));
-                d->addPowerValues(power);
-                devices.insert({transmitter_mac,d});
-            }
-            return;
-
-        }
-        if(ctl->subtype == 1){
-          printf("Association Response\n");
-          struct association_frame *frame;
-          frame = (association_frame *)(packet+radiotapheader->it_len);
-          if(frame->response == 0){
-            printf("Associazione corretta\n");
-            auto transmitter_mac = make_hex_string(std::begin(frame->transmitter), std::end(frame->transmitter), false,  true);
-            auto search = devices.find(transmitter_mac);
-            if(search == devices.end()){
-              Device * d = new Device(transmitter_mac);
+              std::cout << "Non trovato, aggiungo beacon";
+              Device* d = new Device(transmitter_mac);
+              d->setAP(std::string(bframe->ssid));
               d->addPowerValues(power);
               devices.insert({transmitter_mac,d});
             }
-            auto receiver_mac = make_hex_string(std::begin(frame->receiver), std::end(frame->receiver), false, true);
-            auto search2 = devices.find(receiver_mac);
-            if(search2==devices.end()){
-              Device* d = new Device(receiver_mac);
-              devices.insert({receiver_mac,d});
-            }
-            search = devices.find(transmitter_mac);
-            search2 = devices.find(receiver_mac);
-            if(!search->second->isTalking(receiver_mac)){
-              search->second->addTalker(receiver_mac);
-              search2 = devices.find(receiver_mac);
-              search2->second->addTalker(transmitter_mac);
-            }
-          }
             return;
-
-        }
-        if(ctl->subtype == 10){
-
+          }
+          //Association response
+          case 1:{
+            printf("Association Response\n");
+            struct association_frame *frame;
+            frame = (association_frame *)(packet+radiotapheader->it_len);
+            if(frame->response == 0){
+              printf("Associazione corretta\n");
+              auto transmitter_mac = make_hex_string(std::begin(frame->transmitter), std::end(frame->transmitter), false,  true);
+              auto search = devices.find(transmitter_mac);
+              if(search == devices.end()){
+                Device * d = new Device(transmitter_mac);
+                d->addPowerValues(power);
+                devices.insert({transmitter_mac,d});
+              }
+              auto receiver_mac = make_hex_string(std::begin(frame->receiver), std::end(frame->receiver), false, true);
+              auto search2 = devices.find(receiver_mac);
+              if(search2==devices.end()){
+                Device* d = new Device(receiver_mac);
+                devices.insert({receiver_mac,d});
+              }
+              search = devices.find(transmitter_mac);
+              search2 = devices.find(receiver_mac);
+              if(!search->second->isTalking(receiver_mac)){
+                search->second->addTalker(receiver_mac);
+                search2 = devices.find(receiver_mac);
+                search2->second->addTalker(transmitter_mac);
+              }
+            }
+            return;
+          }
+          //Deassociation
+          case 10:{
             printf("Disassociazione\n");
             struct disassociation_frame *frame;
             frame = (disassociation_frame *)(packet+radiotapheader->it_len);
@@ -367,216 +368,172 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               search2->second->removeTalker(transmitter_mac);
             }
             return;
-        }
-
-        if(ctl->subtype == 12){
-
-          printf("Deautenticazione\n");
-          //Riutilizzo control frame
-          struct control_frames *frame;
-          frame = (control_frames *) (packet + radiotapheader->it_len);
-          auto receiver_mac= make_hex_string(std::begin(frame->receiver), std::end(frame->receiver), false,  true);
-          auto transmitter_mac = make_hex_string(std::begin(frame->transmitter), std::end(frame->transmitter), false,  true);
-          //Potrei aggiungerli comunque ai devices se non presenti e non metterli come talkers
-          auto search = devices.find(transmitter_mac);
-          if(search == devices.end()){
-            return;
           }
-          auto search2 = devices.find(receiver_mac);
-          if(search2 == devices.end()){
-            return;
-          }
-          search = devices.find(transmitter_mac);
-          search2 = devices.find(receiver_mac);
-          if(search->second->isTalking(receiver_mac)){
-            printf("Erano connessi, deautenticazione");
-            search->second->removeTalker(receiver_mac);
-            search2->second->removeTalker(transmitter_mac);
-          }
-        return;
-        }
-    }
-    if(ctl->type == 1){
-        printf("\nControl frame\n");
-        struct control_frames *frame;
-        if(ctl->subtype == 8){
-             printf("Block ack req");
-             frame = (control_frames *)(packet+radiotapheader->it_len);
-             printf("Block ack\n");
-             printf("\tReceiver : ");
-             printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->receiver[0],frame->receiver[1],
-                      frame->receiver[2],frame->receiver[3],frame->receiver[4],
-                      frame->receiver[5]);
-             printf("\tTransmitter : ");
-             printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->transmitter[0],frame->transmitter[1],
-                      frame->transmitter[2],frame->transmitter[3],frame->transmitter[4],
-                      frame->transmitter[5]);
-        }
-        if(ctl->subtype == 0){
-          printf("Reserved \n");
-          return;
-        }
-        if(ctl->subtype == 4){
-          printf("Beamforming \n");
-          return;
-        }
-
-        if(ctl->subtype == 7){
-          printf("Control wrapper \n");
-          return;
-        }
-        if(ctl->subtype == 9){
-            frame = (control_frames *)(packet+radiotapheader->it_len);
-            printf("Block ack\n");
-            printf("\tReceiver : ");
-            printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->receiver[0],frame->receiver[1],
-                     frame->receiver[2],frame->receiver[3],frame->receiver[4],
-                     frame->receiver[5]);
-            printf("\tTransmitter : ");
-            printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->transmitter[0],frame->transmitter[1],
-                     frame->transmitter[2],frame->transmitter[3],frame->transmitter[4],
-                     frame->transmitter[5]);
-        }
-        if(ctl->subtype == 11){
-            printf("RTS\n");
-     //       struct control_frames *frame;
-            frame = (control_frames *)(packet+radiotapheader->it_len/*SIZERADIOTAP*/);
-            printf("\tReceiver : ");
-            printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->receiver[0],frame->receiver[1],
-                    frame->receiver[2],frame->receiver[3],frame->receiver[4],
-                    frame->receiver[5]);
-            printf("\tTransmitter : ");
-            printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->transmitter[0],frame->transmitter[1],
-                    frame->transmitter[2],frame->transmitter[3],frame->transmitter[4],
-                    frame->transmitter[5]);
-        }
-        if(ctl->subtype == 12){
-            printf("Clear to send\n");
-            return;
-        }
-        if(ctl->subtype == 13){
-            printf("Ack\n");
-            return;
-        }
-        auto transmitter_mac = make_hex_string(std::begin(frame->transmitter), std::end(frame->transmitter), false,  true);
-        auto search = devices.find(transmitter_mac);
-        std::cout << "Cerco";
-        if(search == devices.end()){
-            std::cout << "Non trovato,aggiungo" << std::endl;
-            if(isValidMAC(transmitter_mac)){
-                Device *d = new Device(transmitter_mac);
-                devices.insert({transmitter_mac,d});
+          //Deauth
+          case 12:{
+            printf("Deautenticazione\n");
+            //Riutilizzo control frame
+            struct control_frames *frame;
+            frame = (control_frames *) (packet + radiotapheader->it_len);
+            auto receiver_mac= make_hex_string(std::begin(frame->receiver), std::end(frame->receiver), false,  true);
+            auto transmitter_mac = make_hex_string(std::begin(frame->transmitter), std::end(frame->transmitter), false,  true);
+            //Potrei aggiungerli comunque ai devices se non presenti e non metterli come talkers
+            auto search = devices.find(transmitter_mac);
+            if(search == devices.end()){
+              return;
             }
+            auto search2 = devices.find(receiver_mac);
+            if(search2 == devices.end()){
+              return;
+            }
+            search = devices.find(transmitter_mac);
+            search2 = devices.find(receiver_mac);
+            if(search->second->isTalking(receiver_mac)){
+              printf("Erano connessi, deautenticazione");
+              search->second->removeTalker(receiver_mac);
+              search2->second->removeTalker(transmitter_mac);
+            }
+            return;
+          }
+          //Default
+          default:
+            return;
         }
-        auto receiver_mac = make_hex_string(std::begin(frame->receiver), std::end(frame->receiver), false,  true);
-        auto search2= devices.find(receiver_mac);
-        if(search2 == devices.end()){
-            if(isValidMAC(receiver_mac)){
+      //Control Frame
+      case 1:
+        switch(ctl->subtype){
+          //Block ack req
+          case 8:
+          //Block ack
+          case 9:
+          //RTS
+          case 11:{
+            struct control_frames *frame;
+            frame = (control_frames *)(packet+radiotapheader->it_len);
+            auto transmitter_mac = make_hex_string(std::begin(frame->transmitter), std::end(frame->transmitter), false,  true);
+            auto search = devices.find(transmitter_mac);
+            std::cout << "Cerco";
+            if(search == devices.end()){
+                std::cout << "Non trovato,aggiungo" << std::endl;
+                if(isValidMAC(transmitter_mac)){
+                    Device *d = new Device(transmitter_mac);
+                    devices.insert({transmitter_mac,d});
+                }
+            }
+            auto receiver_mac = make_hex_string(std::begin(frame->receiver), std::end(frame->receiver), false,  true);
+            auto search2= devices.find(receiver_mac);
+            if(search2 == devices.end()){
+                if(isValidMAC(receiver_mac)){
+                    Device *d = new Device(receiver_mac);
+                    d->addPowerValues(power);
+                    devices.insert({receiver_mac,d});
+                }
+            }
+            if(transmitter_mac.compare(receiver_mac)!=0){
+              search = devices.find(transmitter_mac);
+              search2 = devices.find(receiver_mac);
+              if(search!=devices.end() && search2!=devices.end()){
+                if(!search2->second->isTalking(transmitter_mac)){
+                  search->second->addTalker(receiver_mac);
+                  search2->second->addTalker(transmitter_mac);
+                  search2->second->addPowerValues(power);
+                }
+              }
+            }
+          }
+            return;
+          default:
+            return;
+        }
+      //Data frame
+      case 2:
+        switch(ctl->subtype){
+          //Data
+          case 0:
+          //Null no data
+          case 4:
+          //QoS data
+          case 8:
+          //QoS null no data
+          case 12:{
+            struct data_frames *frame;
+            frame = (data_frames *)(packet+radiotapheader->it_len);
+
+            printf("\tReceiver : ");
+            printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->receiver[0],frame->receiver[1],
+                       frame->receiver[2],frame->receiver[3],frame->receiver[4],
+                       frame->receiver[5]);
+            printf("\tTransmitter : ");
+            printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->transmitter[0],frame->transmitter[1],
+                       frame->transmitter[2],frame->transmitter[3],frame->transmitter[4],
+                       frame->transmitter[5]);
+            printf("\tDestination : ");
+            printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->destination[0],frame->destination[1],
+                       frame->destination[2],frame->destination[3],frame->destination[4],
+                       frame->destination[5]);
+            auto transmitter_mac = make_hex_string(std::begin(frame->transmitter), std::end(frame->transmitter), false,  true);
+            auto search = devices.find(transmitter_mac);
+            std::cout << "Cerco";
+            if(search == devices.end()){
+               std::cout << "Non trovato,aggiungo" << std::endl;
+               if(isValidMAC(transmitter_mac)){
+                  Device *d = new Device(transmitter_mac);
+                  devices.insert({transmitter_mac,d});
+               }
+            }
+            auto receiver_mac = make_hex_string(std::begin(frame->receiver), std::end(frame->receiver), false,  true);
+            auto search2 = devices.find(receiver_mac);
+            if(search2 == devices.end()){
+              if(isValidMAC(receiver_mac)){
                 Device *d = new Device(receiver_mac);
                 d->addPowerValues(power);
                 devices.insert({receiver_mac,d});
+              }
             }
-        }
-        if(transmitter_mac.compare(receiver_mac)!=0){
-        search = devices.find(transmitter_mac);
-        search2 = devices.find(receiver_mac);
-        if(search!=devices.end() && search2!=devices.end()){
-        if(!search2->second->isTalking(transmitter_mac)){
-            search->second->addTalker(receiver_mac);
-            search2->second->addTalker(transmitter_mac);
-            search2->second->addPowerValues(power);
-        }
-      }
-    }
-  }
-    if(ctl->type == 2){
-        printf("\nData frame\n");
-        if(ctl->subtype == 0){
-            printf("Data\n");
-        }
-        if(ctl->subtype == 4){
-            printf("Null no data\n");
-        }
-
-        if(ctl->subtype == 8){
-            printf("QoS data\n");
-        }
-        if(ctl->subtype == 12){
-            printf("QoS null no data\n");
-        }
-        struct data_frames *frame;
-        frame = (data_frames *)(packet+radiotapheader->it_len);
-
-            printf("\tReceiver : ");
-             printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->receiver[0],frame->receiver[1],
-                     frame->receiver[2],frame->receiver[3],frame->receiver[4],
-                     frame->receiver[5]);
-             printf("\tTransmitter : ");
-             printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->transmitter[0],frame->transmitter[1],
-                     frame->transmitter[2],frame->transmitter[3],frame->transmitter[4],
-                     frame->transmitter[5]);
-             printf("\tDestination : ");
-             printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->destination[0],frame->destination[1],
-                     frame->destination[2],frame->destination[3],frame->destination[4],
-                     frame->destination[5]);
-            auto transmitter_mac = make_hex_string(std::begin(frame->transmitter), std::end(frame->transmitter), false,  true);
-            auto search = devices.find(transmitter_mac);
-         std::cout << "Cerco";
-         if(search == devices.end()){
-             std::cout << "Non trovato,aggiungo" << std::endl;
-             if(isValidMAC(transmitter_mac)){
-                Device *d = new Device(transmitter_mac);
-                devices.insert({transmitter_mac,d});
-             }
-         }
-        auto receiver_mac = make_hex_string(std::begin(frame->receiver), std::end(frame->receiver), false,  true);
-        auto search2 = devices.find(receiver_mac);
-         if(search2 == devices.end()){
-             if(isValidMAC(receiver_mac)){
-          Device *d = new Device(receiver_mac);
-          d->addPowerValues(power);
-
-          devices.insert({receiver_mac,d});
-             }
-         }
-
-        auto destination_mac = make_hex_string(std::begin(frame->destination), std::end(frame->destination), false, true);
-        auto search3 = devices.find(destination_mac);
-        if(search3 == devices.end()){
-            if(isValidMAC(destination_mac)){
+            auto destination_mac = make_hex_string(std::begin(frame->destination), std::end(frame->destination), false, true);
+            auto search3 = devices.find(destination_mac);
+            if(search3 == devices.end()){
+              if(isValidMAC(destination_mac)){
                 Device *d =new Device(destination_mac);
                 devices.insert({destination_mac,d});
+              }
             }
+           search = devices.find(transmitter_mac);
+           search2 = devices.find(receiver_mac);
+           search3 = devices.find(destination_mac);
+           if(search!=devices.end() && search2!=devices.end() && search3!=devices.end()){
+             if((!search2->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(receiver_mac)!=0)){
+               search->second->addTalker(receiver_mac);
+               search2->second->addTalker(transmitter_mac);
+               search2->second->addPowerValues(power);
+             }
+             if((!search3->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(destination_mac)!=0)){
+               search->second->addTalker(destination_mac);
+               search3->second->addTalker(transmitter_mac);
+             }
+           }
+            return;
+          }
+          default:
+            return;
         }
-
-         search = devices.find(transmitter_mac);
-         search2 = devices.find(receiver_mac);
-         search3 = devices.find(destination_mac);
-        if(search!=devices.end() && search2!=devices.end() && search3!=devices.end()){
-        if((!search2->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(receiver_mac)!=0)){
-             search->second->addTalker(receiver_mac);
-             search2->second->addTalker(transmitter_mac);
-             search2->second->addPowerValues(power);
-        }
-        if((!search3->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(destination_mac)!=0)){
-            search->second->addTalker(destination_mac);
-            search3->second->addTalker(transmitter_mac);
-        }
-    }
+      //No 0-1-2 type frames
+      default:
+        return;
     }
 }
 
-RadiotapScanner::RadiotapScanner(){
+RadiotapScanner::RadiotapScanner(std::vector<std::string> arp_results){
   //Lookup device
   radiotap_scanner=this;
-  //Errori valgrind dovuti a pcap_lookupdev 
+  arp=arp_results;
+  live_status=true;
+  //Errori valgrind dovuti a pcap_lookupdev
   device = pcap_lookupdev(errbuf);
   if(device == NULL){
       throw std::invalid_argument("Device di rete non trovato\n");
   }
-
   //Aggiungere input vettore mac e controllo
-
   cout << ("Device scelto : ") << device << endl;
   //Get Netmask
   if(pcap_lookupnet(device, &network, &mask, errbuf) == -1) {
@@ -596,57 +553,67 @@ RadiotapScanner::RadiotapScanner(){
   }
   //Promiscous mode
   if(pcap_set_promisc(handle, 1)!=0){
+    pcap_set_rfmon(handle, 0);
     pcap_close(handle);
     throw std::invalid_argument("Errore set promiscous mode");
   }
   //Snaplen
   if(pcap_set_snaplen(handle, 2048)!=0){
+    pcap_set_rfmon(handle, 0);
+    pcap_set_promisc(handle, 0);
     pcap_close(handle);
     throw std::invalid_argument("Errore set snaplen");
   }
   //Timeout
   if(pcap_set_timeout(handle, 1000)!=0){
+    pcap_set_rfmon(handle, 0);
+    pcap_set_promisc(handle, 0);
     pcap_close(handle);
     throw std::invalid_argument("Errore set timeout");
   }
   //Warnings activate
   if(pcap_activate(handle)!=0){
+    pcap_set_rfmon(handle, 0);
+    pcap_set_promisc(handle, 0);
     pcap_close(handle);
     throw std::invalid_argument("Errore attivazione handle");
   }
   //Compile filter
   if(pcap_compile(handle,&fp,filter,0,network) == PCAP_ERROR){
-      pcap_close(handle);
-      throw std::invalid_argument("Errore compile filtro");
+    pcap_set_rfmon(handle, 0);
+    pcap_set_promisc(handle, 0);
+    pcap_close(handle);
+    throw std::invalid_argument("Errore compile filtro");
     //  return 1;
   }
   //Set filter
   if(pcap_setfilter(handle,&fp) == -1){
-      pcap_close(handle);
-      throw std::invalid_argument("Errore set filtro");
+    pcap_set_rfmon(handle, 0);
+    pcap_set_promisc(handle, 0);
+    pcap_close(handle);
+    throw std::invalid_argument("Errore set filtro");
     //  return 1;
   }
 }
 
-RadiotapScanner::RadiotapScanner(char *arg){
+RadiotapScanner::RadiotapScanner(char *arg, std::vector<std::string> arp_results){
   string file;
   file=arg;
   pcap_t * pcap = pcap_open_offline(file.c_str(), errbuf);
   struct pcap_pkthdr *header;
   const u_char *data;
-
+  live_status=false;
   //Forza arp del repeater per wifi_repeater.pcap
-  arp.push_back("70:4f:57:2e:2d:66");
+  arp=arp_results;
   //
 
   u_int packetCount = 0;
   int returnValue;
-      while ((returnValue = pcap_next_ex(pcap, &header, &data) >= 0) /*&& (packetCount<10)*/)
-  {
+    while ((returnValue = pcap_next_ex(pcap, &header, &data) >= 0) /*&& (packetCount<10)*/){
       // Show the packet number
       printf("Packet # %i\n", ++packetCount);
       dissectpacket(NULL,header,data);
-  }
+    }
   std::cout << "Stampa di packResults" << std::endl;
   packResults();
 /*
@@ -710,10 +677,12 @@ void RadiotapScanner::stop_pack(){
   packResults();
 }
 void RadiotapScanner::close(){
-  pcap_set_rfmon(handle,0);
-  pcap_set_promisc(handle,0);
-  pcap_freecode(&fp);
-  pcap_close(handle);
+  if(live_status){
+    pcap_set_rfmon(handle,0);
+    pcap_set_promisc(handle,0);
+    pcap_freecode(&fp);
+    pcap_close(handle);
+  }
   for(const auto n : devices){
     delete(n.second);
   }
