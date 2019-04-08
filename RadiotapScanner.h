@@ -206,9 +206,10 @@ class RadiotapScanner{
     struct bpf_program fp;
     bpf_u_int32 mask;
     bpf_u_int32 network;
+    bool live_status;
     std::vector<std::string> arp;
-    RadiotapScanner();
-    RadiotapScanner(char *arg);
+    RadiotapScanner(std::vector<std::string> arp_results);
+    RadiotapScanner(char *arg, std::vector<std::string> arp_results);
     void startScan(int time);
     void packResults();
     void feedARPResults(std::vector<std::string> arp_r);

@@ -42,8 +42,11 @@ int main(int argc, char *argv[]){
 
   if(argc==1){
     RadiotapScanner *scanner;
+    std::vector<std::string> arp;
+    arp.push_back("70:4f:57:2e:2d:66");
+
     try{
-      scanner = new RadiotapScanner();
+      scanner = new RadiotapScanner(arp);
     }catch(std::invalid_argument& e){
       std::cout << "Catch " << std::endl;
       return 1;
@@ -129,7 +132,9 @@ int main(int argc, char *argv[]){
               i.second->Print();
         }
     }*/
-    RadiotapScanner *scanner2 = new RadiotapScanner(argv[1]);
+    std::vector<std::string> arp;
+    arp.push_back("70:4f:57:2e:2d:66");
+    RadiotapScanner *scanner2 = new RadiotapScanner(argv[1],arp);
   //  scanner2->startScan();
     std::unordered_map<std::string, Device*> r = scanner2->getResult();
     std::cout <<"\nStampa finale\n" << std::endl;
