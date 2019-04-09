@@ -448,6 +448,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
         }
       //Data frame
       //Controlli To DS, From DS per capire entry/exit point
+      //Togliere entrypoint/exitpoint su deautenticazione e disassociazione
       case 2:
         switch(ctl->subtype){
           //Data

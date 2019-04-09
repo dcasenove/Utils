@@ -9,8 +9,8 @@
 struct signal_power{
   time_t timestamp;
   int channel;
-  u_int8_t antenna_signal;
-  u_int8_t antenna_noise;
+  u_int8_t antenna_signal=0;
+  u_int8_t antenna_noise=0;
 };
 
 bool checkLocalAdministered(std::string mac){
