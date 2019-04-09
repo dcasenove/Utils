@@ -137,6 +137,15 @@ void Device::addEndPoint(std::string dev_mac){
   }
 }
 
+void Device::removeEndPoint(std::string dev_mac){
+  for(unsigned long i=0; i < end_point.size() ; i++){
+    if(end_point[i].compare(dev_mac)==0){
+      end_point.erase(end_point.begin()+i);
+      return;
+    }
+  }
+}
+
 void Device::addStartPoint(std::string dev_mac){
   for(unsigned long i=0; i< start_point.size() ; i++){
     if(start_point[i].compare(dev_mac)==0){
@@ -145,6 +154,15 @@ void Device::addStartPoint(std::string dev_mac){
   }
   if(!(dev_mac==getDeviceMAC())){
     start_point.push_back(dev_mac);
+  }
+}
+
+void Device::removeStartPoint(std::string dev_mac){
+  for(unsigned long i=0; i < start_point.size() ; i++){
+    if(start_point[i].compare(dev_mac)==0){
+      start_point.erase(start_point.begin()+i);
+      return;
+    }
   }
 }
 

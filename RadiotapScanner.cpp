@@ -14,7 +14,7 @@ uint32_t crc32(uint32_t bytes_sz, const uint8_t *bytes){
 }
 
 void RadiotapScanner::findGloballyAdministeredInterface(std::string mac){
-  std::cout << "Dentro find" << std::endl;
+  std::cout << "Dentro find di " << mac << std::endl;
   auto search = devices.find(mac);
   //devices.erase(search);
   std::string last_three_octects=mac.substr(9,8);
@@ -24,9 +24,10 @@ void RadiotapScanner::findGloballyAdministeredInterface(std::string mac){
       std::cout << "ultimi 3 ottetti" << last_three_octects << std::endl;
       std::size_t s = n.first.find(last_three_octects,9);
       if((s!=std::string::npos)){//&&(n.first.compare(mac)!=0)
-        std::cout << "Dentro if" << std::endl;
+        std::cout << "Dentro if" <<  mac << std::endl;
         n.second->local_assigned_interfaces.push_back(search->second);
         search->second->main_device=n.second;
+        std::cout << " Main device " << n.second->getDeviceMAC() << std::endl;
         return;
       }
     }
@@ -125,6 +126,7 @@ bool isValidMAC(std::string mac_address){
     std::string ipv6multicast("33:33:00:00:00");
     std::string ipv6multicast2("33:33:ff");
     std::string cdp("01:00:0c:cc:cc:cc");
+    std::string stp("01:80:c2:00:00:00");
 
     std::size_t found;
     found = mac_address.find(multicast);
@@ -144,6 +146,10 @@ bool isValidMAC(std::string mac_address){
       return false;
     }
     found = mac_address.find(cdp);
+    if(found!=std::string::npos){
+      return false;
+    }
+    found = mac_address.find(stp);
     if(found!=std::string::npos){
       return false;
     }
@@ -365,6 +371,8 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
             if(search->second->isTalking(destination_mac)){
               printf("Erano connessi, disassocio");
               search->second->removeTalker(destination_mac);
+              search->second->removeEndPoint(destination_mac);
+              search->second->removeStartPoint(destination_mac);
               search2->second->removeTalker(transmitter_mac);
             }
             return;
@@ -391,6 +399,10 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
             if(search->second->isTalking(receiver_mac)){
               printf("Erano connessi, deautenticazione");
               search->second->removeTalker(receiver_mac);
+              search->second->removeEndPoint(receiver_mac);
+              search->second->removeStartPoint(receiver_mac);
+              search2->second->removeEndPoint(transmitter_mac);
+              search2->second->removeStartPoint(transmitter_mac);
               search2->second->removeTalker(transmitter_mac);
             }
             return;
@@ -474,8 +486,10 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               auto transmitter_mac = make_hex_string(std::begin(frame->address2), std::end(frame->address2), false, true);
               auto search = devices.find(transmitter_mac);
               if(search == devices.end()){
-                Device *d = new Device(transmitter_mac);
-                devices.insert({transmitter_mac,d});
+                if(isValidMAC(transmitter_mac)){
+                  Device *d = new Device(transmitter_mac);
+                  devices.insert({transmitter_mac,d});
+                }
               }
               auto receiver_mac = make_hex_string(std::begin(frame->address1), std::end(frame->address1), false, true);
               auto search2 = devices.find(receiver_mac);
@@ -521,8 +535,10 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               auto transmitter_mac = make_hex_string(std::begin(frame->address1), std::end(frame->address1), false, true);
               auto search = devices.find(transmitter_mac);
               if(search == devices.end()){
-                Device *d = new Device(transmitter_mac);
-                devices.insert({transmitter_mac,d});
+                if(isValidMAC(transmitter_mac)){
+                  Device *d = new Device(transmitter_mac);
+                  devices.insert({transmitter_mac,d});
+                }
               }
               auto receiver_mac = make_hex_string(std::begin(frame->address3), std::end(frame->address3), false, true);
               auto search2 = devices.find(receiver_mac);
@@ -746,15 +762,21 @@ void RadiotapScanner::packResults(){
       checkLocalAdministered(mac);
   }*/
 }
-  for(const auto i : devices){
+/*  for(const auto i : devices){
     if(i.second->isLocallyAdministered){
       findGloballyAdministeredInterface(i.second->mac_address);
     }
-  }
+  }*/
 
   for( const auto n : ap ){
     findMainMACAP(n->getDeviceMAC());
   }
+  //Spostato da sopra
+  for(const auto i : devices){
+      if(i.second->isLocallyAdministered){
+        findGloballyAdministeredInterface(i.second->mac_address);
+    }
+  }/*
 /*
   for( const auto n : devices ){
     findMainMACAP(n.second->getDeviceMAC());

@@ -9,8 +9,8 @@
 struct signal_power{
   time_t timestamp;
   int channel;
-  u_int8_t antenna_signal=0;
-  u_int8_t antenna_noise=0;
+  u_int8_t antenna_signal;
+  u_int8_t antenna_noise;
 };
 
 bool checkLocalAdministered(std::string mac){
@@ -62,7 +62,9 @@ class Device{
         void addTalker(std::string dev_mac);
         void removeTalker(std::string dev_mac);
         void addEndPoint(std::string dev_mac);
+        void removeEndPoint(std::string dev_mac);
         void addStartPoint(std::string dev_mac);
+        void removeStartPoint(std::string dev_mac);
         void addPowerValues(struct signal_power p);
         void addLocalInterface(Device* d);
         signal_power returnPowerValues();
