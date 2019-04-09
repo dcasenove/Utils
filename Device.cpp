@@ -124,6 +124,29 @@ void Device::removeTalker(std::string dev_mac){
   }
 }
 
+void Device::addEndPoint(std::string dev_mac){
+  for(unsigned long i=0; i< end_point.size() ; i++){
+    if(end_point[i].compare(dev_mac)==0){
+      return;
+    }
+  }
+  if(!(dev_mac==getDeviceMAC())){
+    end_point.push_back(dev_mac);
+  }
+}
+
+void Device::addStartPoint(std::string dev_mac){
+  for(unsigned long i=0; i< start_point.size() ; i++){
+    if(start_point[i].compare(dev_mac)==0){
+      return;
+    }
+  }
+  if(!(dev_mac==getDeviceMAC())){
+    start_point.push_back(dev_mac);
+  }
+}
+
+
 void Device::addPowerValues(struct signal_power p){
   power.antenna_signal=p.antenna_signal;
   power.antenna_noise=p.antenna_noise;

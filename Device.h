@@ -43,6 +43,9 @@ class Device{
         std::string mac_address;
         std::string ip_address;
         std::vector<std::string> talkers;
+        //Aggiunta end_point start_point
+        std::vector<std::string> end_point;
+        std::vector<std::string> start_point;
         std::vector<Device*> local_assigned_interfaces;
         Device* main_device;
         struct signal_power power;
@@ -58,6 +61,8 @@ class Device{
         bool isTalking(std::string dev_mac);
         void addTalker(std::string dev_mac);
         void removeTalker(std::string dev_mac);
+        void addEndPoint(std::string dev_mac);
+        void addStartPoint(std::string dev_mac);
         void addPowerValues(struct signal_power p);
         void addLocalInterface(Device* d);
         signal_power returnPowerValues();

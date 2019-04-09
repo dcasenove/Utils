@@ -129,9 +129,9 @@ struct control_frames{
 struct data_frames{
     u_int16_t framectl;
     u_int16_t duration;
-    u_int8_t receiver[6];
-    u_int8_t transmitter[6];
-    u_int8_t destination[6];
+    u_int8_t address1[6];
+    u_int8_t address2[6];
+    u_int8_t address3[6];
 };
 
 char filter[]="type mgt or type ctl or type data";

@@ -97,6 +97,15 @@ int main(int argc, char *argv[]){
           std::cout << "Non trovato";
         }*/
       }
+      std::cout << "Endpoint per " << std::endl;
+      for(unsigned long c = 0 ; c < i.second->talkers.size() ; c++){
+        std::cout << i.second->end_point[c] << std::endl;
+      }
+      std::cout << "Entrypoint per " << std::endl;
+      for(unsigned long c = 0 ; c < i.second->talkers.size() ; c++){
+        std::cout << i.second->start_point[c] << std::endl;
+      }
+
       std::cout << "******************************************" << std::endl;
 
       }
@@ -182,9 +191,31 @@ int main(int argc, char *argv[]){
           std::cout << "Non trovato";
         }*/
       }
-      std::cout << "******************************************" << std::endl;
 
+      std::cout << "Endpoint per " << std::endl;
+      for(unsigned long c = 0 ; c < i.second->end_point.size() ; c++){
+        std::cout << i.second->end_point[c] << std::endl;
       }
+      std::cout << "Entrypoint per " << std::endl;
+      for(unsigned long c = 0 ; c < i.second->start_point.size() ; c++){
+        std::cout << i.second->start_point[c] << std::endl;
+      }
+
+      std::cout << "******************************************" << std::endl;
+      }
+  }
+  for(auto i : r){
+    if(!i.second->isAP){
+      std::cout << "Device " << i.second->getDeviceMAC() << std::endl;
+      signal_power p =i.second->returnPowerValues();
+      printf("\tSignal : %d\n",(signed char) i.second->power.antenna_signal);
+      printf("\tNoise : %d\n",(signed char) i.second->power.antenna_noise);
+      std::cout << "Comunica con " << std::endl;
+      for(unsigned long c = 0 ; c < i.second->talkers.size() ; c++){
+        std::cout << i.second->talkers[c] << std::endl;
+      }
+    }
+    std::cout << "*********************" << std::endl;
   }
   scanner2->close();
   delete(scanner2);
