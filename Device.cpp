@@ -5,6 +5,8 @@ Device::Device(std::string mac){
   isAP=false;
   mac_address=mac;
   main_device=NULL;
+  power.antenna_signal=0;
+  power.antenna_noise=0;
   isLocallyAdministered=checkLocalAdministered(mac_address);
 }
 
