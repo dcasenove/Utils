@@ -5,7 +5,9 @@
 #include <iomanip>
 #include <sstream>
 #include <exception>
+#include <algorithm>
 #include "Device.h"
+#include "WiFiResult.h"
 
 extern "C"{
     #include <pcap.h>
@@ -218,6 +220,7 @@ class RadiotapScanner{
     void stop_pack();
     void findMainMACAP(std::string mac);
     void findGloballyAdministeredInterface(std::string mac);
+    WiFiResult* getWiFiResult();
     std::unordered_map<std::string,Device*> getResult();
 };
 

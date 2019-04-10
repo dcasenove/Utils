@@ -217,6 +217,10 @@ int main(int argc, char *argv[]){
     }
     std::cout << "*********************" << std::endl;
   }
+
+  WiFiResult* output=scanner2->getWiFiResult();
+  output->prettyprint();
+  delete(output);
   scanner2->close();
   delete(scanner2);
 }

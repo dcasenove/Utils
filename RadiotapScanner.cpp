@@ -430,6 +430,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
                 std::cout << "Non trovato,aggiungo" << std::endl;
                 if(isValidMAC(transmitter_mac)){
                     Device *d = new Device(transmitter_mac);
+                    d->addPowerValues(power);
                     devices.insert({transmitter_mac,d});
                 }
             }
@@ -438,7 +439,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
             if(search2 == devices.end()){
                 if(isValidMAC(receiver_mac)){
                     Device *d = new Device(receiver_mac);
-                    d->addPowerValues(power);
+                  //  d->addPowerValues(power);
                     devices.insert({receiver_mac,d});
                 }
             }
@@ -448,6 +449,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               if(search!=devices.end() && search2!=devices.end()){
                 if(!search2->second->isTalking(transmitter_mac)){
                   search->second->addTalker(receiver_mac);
+                  search->second->addPowerValues(power);
                   search2->second->addTalker(transmitter_mac);
                   search2->second->addPowerValues(power);
                 }
@@ -482,6 +484,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
             //Address 3 = Source
             //Entra su wifi
             //Da cavo a wifi
+            //Controllare valori power wifi
             if(ctl->to_ds==0 && ctl->from_ds==1){
               auto transmitter_mac = make_hex_string(std::begin(frame->address2), std::end(frame->address2), false, true);
               auto search = devices.find(transmitter_mac);
@@ -496,7 +499,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               if(search2 == devices.end()){
                 if(isValidMAC(receiver_mac)){
                   Device *d = new Device(receiver_mac);
-                  d->addPowerValues(power);
+                //  d->addPowerValues(power);
                   devices.insert({receiver_mac,d});
                 }
               }
@@ -505,6 +508,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               if(search3 == devices.end()){
                 if(isValidMAC(source_mac)){
                   Device *d =new Device(source_mac);
+                //  d->addPowerValues(power);
                   devices.insert({source_mac,d});
                 }
               }
@@ -516,10 +520,11 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
                   search->second->addTalker(receiver_mac);
                   search->second->addEndPoint(receiver_mac);
                   search2->second->addTalker(transmitter_mac);
-                  search2->second->addPowerValues(power);
+                //  search2->second->addPowerValues(power);
                 }
                 if((!search3->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(source_mac)!=0)){
                   search->second->addTalker(source_mac);
+                  search->second->addPowerValues(power);
                   search->second->addStartPoint(source_mac);
                   search3->second->addTalker(transmitter_mac);
                 }
@@ -537,6 +542,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               if(search == devices.end()){
                 if(isValidMAC(transmitter_mac)){
                   Device *d = new Device(transmitter_mac);
+                //  d->addPowerValues(power);
                   devices.insert({transmitter_mac,d});
                 }
               }
@@ -545,7 +551,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               if(search2 == devices.end()){
                 if(isValidMAC(receiver_mac)){
                   Device *d = new Device(receiver_mac);
-                  d->addPowerValues(power);
+                //  d->addPowerValues(power);
                   devices.insert({receiver_mac,d});
                 }
               }
@@ -554,6 +560,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               if(search3 == devices.end()){
                 if(isValidMAC(source_mac)){
                   Device *d =new Device(source_mac);
+                  d->addPowerValues(power);
                   devices.insert({source_mac,d});
                 }
               }
@@ -565,12 +572,15 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
                   search->second->addTalker(receiver_mac);
                   search->second->addStartPoint(receiver_mac);
                   search2->second->addTalker(transmitter_mac);
-                  search2->second->addPowerValues(power);
+                  //search2->second->addPowerValues(power);
                 }
                 if((!search3->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(source_mac)!=0)){
                   search->second->addTalker(source_mac);
                   search->second->addEndPoint(source_mac);
+                  search3->second->addPowerValues(power);
                   search3->second->addTalker(transmitter_mac);
+                  //search3->second->addPowerValues(power);
+
                 }
               }
             }
@@ -776,7 +786,8 @@ void RadiotapScanner::packResults(){
       if(i.second->isLocallyAdministered){
         findGloballyAdministeredInterface(i.second->mac_address);
     }
-  }/*
+  }
+  /*
 /*
   for( const auto n : devices ){
     findMainMACAP(n.second->getDeviceMAC());
@@ -816,4 +827,110 @@ void RadiotapScanner::feedARPResults(vector<std::string> arp_r){
 
 std::unordered_map<std::string,Device*> RadiotapScanner::getResult(){
   return devices;
+}
+
+WiFiResult* RadiotapScanner::getWiFiResult(){
+  std::list<device_wifi> device_list;
+  for(const auto n : devices){
+    //Utilizzare MAC principale e non dell'AP
+    if(n.second->isAP){
+      device_wifi d;
+      if(n.second->main_device!=NULL){
+        d.mac_wifidevice = n.second->main_device->getDeviceMAC();
+      }
+      else{
+        d.mac_wifidevice = n.second->getDeviceMAC();
+      }
+      d.ssid = n.second->getDeviceSSID();
+      d.antenna_signal=n.second->power.antenna_signal;
+      d.antenna_noise=n.second->power.antenna_noise;
+      d.channel=n.second->power.channel;
+      for(auto i : n.second->end_point){
+        auto search = devices.find(i);
+        auto k = search->second->getDeviceMAC();
+        if(search->second->main_device!=NULL){
+          k = search->second->main_device->getDeviceMAC();
+        }
+        if(k==d.mac_wifidevice){
+          continue;
+        }
+        if(std::find(d.connected.begin(), d.connected.end(), k) == d.connected.end()){
+          d.connected.push_back(k);
+        }
+      }
+      for(auto i : n.second->start_point){
+        auto search = devices.find(i);
+        auto k = search->second->getDeviceMAC();
+        if(search->second->main_device!=NULL){
+          k = search->second->main_device->getDeviceMAC();
+        }
+        if(k==d.mac_wifidevice){
+          continue;
+        }
+        if(std::find(d.connected.begin(), d.connected.end(), k) == d.connected.end()){
+          d.connected.push_back(k);
+        }
+      }
+      device_list.push_back(d);
+    }
+  }
+  //Unire cicli
+  std::list<pc_wifi> pc_list;
+  for(const auto n : devices){
+    if(!n.second->isAP){
+
+      bool main_ap=false;
+      for(auto i : n.second->local_assigned_interfaces){
+        if(i->isAP){
+          main_ap=true;
+          break;
+        }
+      }
+      if(main_ap){
+        continue;
+      }
+      pc_wifi pc;
+      if(n.second->main_device!=NULL){
+        bool main_ap=false;
+        std::list<device_wifi>::iterator it1;
+        for(it1 = device_list.begin() ; it1 != device_list.end() ; it1++){
+          if(n.second->main_device->mac_address==it1->mac_wifidevice){
+            main_ap=true;
+          }
+        }
+        if(main_ap){
+          continue;
+        }
+        if(!n.second->main_device->isAP){
+          pc.mac_pc = n.second->main_device->getDeviceMAC();
+          pc.antenna_signal=n.second->main_device->power.antenna_signal;
+          pc.antenna_noise=n.second->main_device->power.antenna_noise;
+        }
+        else{
+          continue;
+        }
+      }
+      else{
+        pc.mac_pc = n.second->getDeviceMAC();
+        pc.antenna_signal=n.second->power.antenna_signal;
+        pc.antenna_noise=n.second->power.antenna_noise;
+      }
+      if(n.second->talkers.size()!=0){
+        pc.mac_wifidevice=n.second->talkers[0];
+      }
+      std::list<pc_wifi>::iterator it;
+      bool found=false;
+      for( it = pc_list.begin() ; it != pc_list.end() ; it++){
+        if(pc.mac_pc==it->mac_pc){
+          found=true;
+        }
+      }
+      if(!found){
+        pc_list.push_back(pc);
+      }
+      //pc_list.push_back(pc);
+    }
+  }
+  WiFiResult *toreturn = new WiFiResult(device_list,pc_list);
+  return toreturn;
 }
