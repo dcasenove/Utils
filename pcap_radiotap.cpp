@@ -52,7 +52,7 @@ int main(int argc, char *argv[]){
       return 1;
     }
     scanner->startScan(5);
-    std::unordered_map<std::string, Device*> r = scanner->getResult();
+  /*  std::unordered_map<std::string, Device*> r = scanner->getResult();
     for(auto i : r){
       if(i.second->isAP){
         std::cout << "******************************************" << std::endl;
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]){
         }
         else{
           std::cout << "Non trovato";
-        }*/
+        }*//*
       }
       std::cout << "Endpoint per " << std::endl;
       for(unsigned long c = 0 ; c < i.second->talkers.size() ; c++){
@@ -110,6 +110,23 @@ int main(int argc, char *argv[]){
 
       }
   }
+  for(auto i : r){
+    if(!i.second->isAP){
+      std::cout << "Device " << i.second->getDeviceMAC() << std::endl;
+      signal_power p =i.second->returnPowerValues();
+      printf("\tSignal : %d\n",(signed char) i.second->power.antenna_signal);
+      printf("\tNoise : %d\n",(signed char) i.second->power.antenna_noise);
+      std::cout << "Comunica con " << std::endl;
+      for(unsigned long c = 0 ; c < i.second->talkers.size() ; c++){
+        std::cout << i.second->talkers[c] << std::endl;
+      }
+    }
+    std::cout << "*********************" << std::endl;
+  }
+*/
+    WiFiResult* output=scanner->getWiFiResult();
+    output->prettyprint();
+    delete(output);
     scanner->close();
     delete(scanner);
   //  ArpScanner *scanner = new ArpScanner();
