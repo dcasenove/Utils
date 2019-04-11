@@ -148,6 +148,12 @@ int main(int argc, char *argv[]){
     std::unordered_map<std::string, Device*> r = scanner2->getResult();
     std::cout <<"\nStampa finale\n" << std::endl;
     for(auto i : r){
+      std::cout << i.second->getDeviceMAC();
+      printf(" Signal : %d ",(signed char) i.second->power.antenna_signal);
+      printf(" Noise : %d\n",(signed char) i.second->power.antenna_noise);
+
+    }
+    for(auto i : r){
       if(i.second->isAP){
         std::cout << "******************************************" << std::endl;
           std::cout << "Main Device :" << i.second->main_device->mac_address;

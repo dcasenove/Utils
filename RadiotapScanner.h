@@ -46,7 +46,7 @@ static freq_cvt_t freq_cvt[] = {
 #define MAX_CHANNEL(fc) ( (gint) ((fc.fmax - fc.fmin) / FREQ_STEP) + fc.cmin )
 
 
-struct mac_addr {
+struct mac_addr{
    u_int8_t bytes[6];
 };
 struct isAP{
@@ -55,14 +55,9 @@ struct isAP{
 };
 
 
-struct ieee80211mac {
-    //unsigned int
+struct ieee80211mac{
     u_int16_t framectl;
     u_int16_t duration;
- /*   u_int8_t  receiver[6];
-    u_int8_t  transmitter[6];
-    u_int8_t  destination[6];
-    u_int16_t seq_control;*/
 };
 
 struct framectl_bits{

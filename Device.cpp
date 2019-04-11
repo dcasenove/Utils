@@ -11,19 +11,10 @@ Device::Device(std::string mac){
 }
 
 Device::~Device(){
-  //Cambiare ssid stringa
-  //  if(ssid!=NULL){
-  //    delete[](ssid);
-  //  }
 }
 
 void Device::setAP(std::string ssidp){
   isAP=true;
-  //ssid = new char[length+1];
-  //memcpy(ssid,ssidp,length);
-  //ssid[length]='\0';
-  //free(ssidp);
-  //ssid = std::string(ssidp);
   if(ssid!=ssidp){
     ssid=ssidp;
   }
@@ -87,21 +78,17 @@ void Device::Print(){
 std::string Device::getDeviceMAC(){
   return mac_address;
 }
-/*
-char * Device::getDeviceSSID(){
-  return ssid;
-}*/
 
 std::string Device::getDeviceSSID(){
     return ssid;
 
 }
+
 std::string Device::getDeviceIP(){
   return ip_address;
 }
 
 bool Device::isTalking(std::string dev_mac){
-  std::cout << "Dentro istalking";
   for(unsigned long i=0; i < talkers.size() ; i++){
       if(talkers[i].compare(dev_mac)==0){
           return true;
@@ -111,7 +98,6 @@ bool Device::isTalking(std::string dev_mac){
 }
 
 void Device::addTalker(std::string dev_mac){
-  std::cout << "Dentro addtalker";
   if(!(dev_mac==getDeviceMAC())){
     talkers.push_back(dev_mac);
   }

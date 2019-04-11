@@ -20,7 +20,6 @@ bool checkLocalAdministered(std::string mac){
   unsigned np;
   ss >> np;
   std::bitset<8> b(np);
-//  cout << b.to_string() << endl;
   std::string finale = b.to_string();
   std::cout << "Prima " << finale << std::endl;
   if(finale.compare(6,1,"0")==0){

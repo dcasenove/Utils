@@ -4,6 +4,7 @@ using namespace std;
 
 std::unordered_map<std::string,Device*> devices;
 
+/*CRC check*/
 uint32_t crc32(uint32_t bytes_sz, const uint8_t *bytes){
    uint32_t crc = ~0;
    uint32_t i;
@@ -13,6 +14,7 @@ uint32_t crc32(uint32_t bytes_sz, const uint8_t *bytes){
    return ~crc;
 }
 
+/*Find globally administered MAC address*/
 void RadiotapScanner::findGloballyAdministeredInterface(std::string mac){
   std::cout << "Dentro find di " << mac << std::endl;
   auto search = devices.find(mac);
@@ -51,9 +53,9 @@ void RadiotapScanner::findGloballyAdministeredInterface(std::string mac){
       }
     }
   }
-  //Risultati arp scan
 }
 
+/*Find physical address of virtual devices*/
   void RadiotapScanner::findMainMACAP(std::string mac){
     std::string first_five_octects=mac.substr(0,15);
     std::cout << "Primi cinque ottetti" << first_five_octects << std::endl;
@@ -102,8 +104,7 @@ void RadiotapScanner::findGloballyAdministeredInterface(std::string mac){
     search->second->local_assigned_interfaces.push_back(toinclude->second);
   }
 
-
-
+/*Hex string converter*/
 template<typename TInputIter>
 std::string make_hex_string(TInputIter first, TInputIter last,
    bool use_uppercase = true, bool insert_spaces = false){
@@ -120,6 +121,7 @@ std::string make_hex_string(TInputIter first, TInputIter last,
     return ss.str();
 }
 
+/*MAC address validity check */
 bool isValidMAC(std::string mac_address){
     std::string multicast("01:00:5e");
     std::string broadcast("ff:ff:ff:ff:ff:ff");
@@ -156,6 +158,7 @@ bool isValidMAC(std::string mac_address){
     return true;
 }
 
+/*Convert MHz frequency to channel integer*/
 int ieee80211_mhz_to_chan(unsigned int freq){
   unsigned int i;
   for(i = 0; i < NUM_FREQ_CVT; i++){
@@ -213,7 +216,6 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
     struct ieee80211_radiotap_iterator iter;
     struct signal_power power;
     static int count = 1;
-    int i;
     cout << ("Pacchetto : ") << count << endl;
     printf("%ld.%06d\n", header->ts.tv_sec, header->ts.tv_usec);
     cout << ("Lunghezza header : ") << (int)header->len << endl;
@@ -254,7 +256,6 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
     radiotapheader = (ieee80211_radiotap_header*) packet;
     printf("Radiotap header len %u\n", radiotapheader->it_len);
 
-    //Aggiunto controllo CRC
     uint32_t crc = crc32(header->len-4-radiotapheader->it_len,packet+radiotapheader->it_len);
     uint32_t received_crc;
     memcpy(&received_crc,&packet[header->len-4],4);
@@ -484,13 +485,14 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
             //Address 3 = Source
             //Entra su wifi
             //Da cavo a wifi
-            //Controllare valori power wifi
+            //Controllare valori power wifi, probabilmente va su transmitter
             if(ctl->to_ds==0 && ctl->from_ds==1){
               auto transmitter_mac = make_hex_string(std::begin(frame->address2), std::end(frame->address2), false, true);
               auto search = devices.find(transmitter_mac);
               if(search == devices.end()){
                 if(isValidMAC(transmitter_mac)){
                   Device *d = new Device(transmitter_mac);
+                  d->addPowerValues(power);
                   devices.insert({transmitter_mac,d});
                 }
               }
@@ -508,7 +510,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               if(search3 == devices.end()){
                 if(isValidMAC(source_mac)){
                   Device *d =new Device(source_mac);
-                //  d->addPowerValues(power);
+                  d->addPowerValues(power);
                   devices.insert({source_mac,d});
                 }
               }
@@ -516,15 +518,24 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               search2 = devices.find(receiver_mac);
               search3 = devices.find(source_mac);
               if(search!=devices.end() && search2!=devices.end() && search3!=devices.end()){
+                //search->second->addEndPoint(receiver_mac);
+
                 if((!search2->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(receiver_mac)!=0)){
                   search->second->addTalker(receiver_mac);
                   search->second->addEndPoint(receiver_mac);
                   search2->second->addTalker(transmitter_mac);
-                //  search2->second->addPowerValues(power);
+                //  search->second->addPowerValues(power);
                 }
+
+
+                //search3->second->addPowerValues(power);
+                search->second->addPowerValues(power);
+                //search->second->addStartPoint(source_mac);
+
                 if((!search3->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(source_mac)!=0)){
                   search->second->addTalker(source_mac);
-                  search->second->addPowerValues(power);
+                //  search->second->addPowerValues(power);
+                  search3->second->addPowerValues(power);
                   search->second->addStartPoint(source_mac);
                   search3->second->addTalker(transmitter_mac);
                 }
@@ -535,7 +546,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
             //Address 2 = Source
             //Address 3 = Destination
             //Esce da wifi
-            //Da wifi a cavo
+            //Da wifi a cavo  Power = Source
             if(ctl->to_ds==1 && ctl->from_ds==0){
               auto transmitter_mac = make_hex_string(std::begin(frame->address1), std::end(frame->address1), false, true);
               auto search = devices.find(transmitter_mac);
@@ -568,12 +579,16 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               search2 = devices.find(receiver_mac);
               search3 = devices.find(source_mac);
               if(search!=devices.end() && search2!=devices.end() && search3!=devices.end()){
+              //  search->second->addStartPoint(receiver_mac);
                 if((!search2->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(receiver_mac)!=0)){
                   search->second->addTalker(receiver_mac);
                   search->second->addStartPoint(receiver_mac);
                   search2->second->addTalker(transmitter_mac);
                   //search2->second->addPowerValues(power);
                 }
+                //Mettere i add power values fuori dall'if
+                search3->second->addPowerValues(power);
+             //   search->second->addEndPoint(source_mac);
                 if((!search3->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(source_mac)!=0)){
                   search->second->addTalker(source_mac);
                   search->second->addEndPoint(source_mac);
@@ -771,16 +786,17 @@ void RadiotapScanner::packResults(){
       std::string mac = v;
       checkLocalAdministered(mac);
   }*/
-}
-/*  for(const auto i : devices){
+}/*
+  for(const auto i : devices){
     if(i.second->isLocallyAdministered){
       findGloballyAdministeredInterface(i.second->mac_address);
     }
-  }*/
-
+  }
+*/
   for( const auto n : ap ){
     findMainMACAP(n->getDeviceMAC());
   }
+
   //Spostato da sopra
   for(const auto i : devices){
       if(i.second->isLocallyAdministered){
@@ -788,7 +804,6 @@ void RadiotapScanner::packResults(){
     }
   }
   /*
-/*
   for( const auto n : devices ){
     findMainMACAP(n.second->getDeviceMAC());
   }*/
@@ -855,6 +870,10 @@ WiFiResult* RadiotapScanner::getWiFiResult(){
           continue;
         }
         if(std::find(d.connected.begin(), d.connected.end(), k) == d.connected.end()){
+          std::cout << "Aggiungo " << k;
+          printf(" Signal : %d ",(signed char) search->second->power.antenna_signal);
+          printf(" Noise : %d\n",(signed char) search->second->power.antenna_noise);
+
           d.connected.push_back(k);
         }
       }
@@ -869,6 +888,10 @@ WiFiResult* RadiotapScanner::getWiFiResult(){
         }
         if(std::find(d.connected.begin(), d.connected.end(), k) == d.connected.end()){
           d.connected.push_back(k);
+          std::cout << "Aggiungo " << k;
+          printf(" Signal : %d ",(signed char) search->second->power.antenna_signal);
+          printf(" Noise : %d\n",(signed char) search->second->power.antenna_noise);
+
         }
       }
       device_list.push_back(d);
@@ -917,6 +940,10 @@ WiFiResult* RadiotapScanner::getWiFiResult(){
       }
       if(n.second->talkers.size()!=0){
         pc.mac_wifidevice=n.second->talkers[0];
+        auto search = devices.find(n.second->talkers[0]);
+        if(search->second->main_device!=NULL){
+          pc.mac_wifidevice=search->second->main_device->getDeviceMAC();
+        }
       }
       std::list<pc_wifi>::iterator it;
       bool found=false;

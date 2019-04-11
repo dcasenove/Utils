@@ -27,7 +27,12 @@ void WiFiResult::prettyprint(){
 
   for(auto n : pcs_wifi){
     std::cout << "MAC Address: " << n.mac_pc << " connesso a device MAC Address: " << n.mac_wifidevice;
-    printf(" Signal : %d ",(signed char) n.antenna_signal);
-    printf(" Noise : %d\n",(signed char) n.antenna_noise);
+    if(n.antenna_noise!=0 && n.antenna_signal!=0){
+      printf(" Signal : %d ",(signed char) n.antenna_signal);
+      printf(" Noise : %d\n",(signed char) n.antenna_noise);
+    }
+    else{
+      std::cout << " tramite ethernet" << std::endl; 
+    }
   }
 }
