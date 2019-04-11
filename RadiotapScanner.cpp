@@ -57,10 +57,24 @@ void RadiotapScanner::findGloballyAdministeredInterface(std::string mac){
 
 /*Find physical address of virtual devices*/
   void RadiotapScanner::findMainMACAP(std::string mac){
-    std::string first_five_octects=mac.substr(0,15);
-    std::cout << "Primi cinque ottetti" << first_five_octects << std::endl;
     vector<std::string> found;
-    found.push_back(mac);
+    auto s = devices.find(mac);
+    std::string first_five_octects;
+    std::cout << "Stringa : " << mac << std::endl;
+    if(!s->second->isLocallyAdministered){
+      first_five_octects=mac.substr(0,15);
+      std::cout << "Primi cinque ottetti" << first_five_octects << std::endl;
+      found.push_back(mac);
+    }
+    else if(s->second->isLocallyAdministered && s->second->main_device!=NULL){
+      std::cout << "Non localmente amministrato" << std::endl;
+      std::string mainmac = s->second->main_device->getDeviceMAC();
+      first_five_octects=mainmac.substr(0,15);
+      found.push_back(mainmac);
+    }
+//    first_five_octects=mac.substr(0,15);
+//    std::cout << "Primi cinque ottetti" << first_five_octects << std::endl;
+//    found.push_back(mac);
     for(auto n : devices){
       std::size_t s = n.first.find(first_five_octects,0);
       if((s!=std::string::npos)){
@@ -518,7 +532,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               search2 = devices.find(receiver_mac);
               search3 = devices.find(source_mac);
               if(search!=devices.end() && search2!=devices.end() && search3!=devices.end()){
-                //search->second->addEndPoint(receiver_mac);
+                search->second->addEndPoint(receiver_mac);
 
                 if((!search2->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(receiver_mac)!=0)){
                   search->second->addTalker(receiver_mac);
@@ -530,7 +544,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
 
                 //search3->second->addPowerValues(power);
                 search->second->addPowerValues(power);
-                //search->second->addStartPoint(source_mac);
+                search->second->addStartPoint(source_mac);
 
                 if((!search3->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(source_mac)!=0)){
                   search->second->addTalker(source_mac);
@@ -579,7 +593,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               search2 = devices.find(receiver_mac);
               search3 = devices.find(source_mac);
               if(search!=devices.end() && search2!=devices.end() && search3!=devices.end()){
-              //  search->second->addStartPoint(receiver_mac);
+                search->second->addStartPoint(receiver_mac);
                 if((!search2->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(receiver_mac)!=0)){
                   search->second->addTalker(receiver_mac);
                   search->second->addStartPoint(receiver_mac);
@@ -588,7 +602,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
                 }
                 //Mettere i add power values fuori dall'if
                 search3->second->addPowerValues(power);
-             //   search->second->addEndPoint(source_mac);
+                search->second->addEndPoint(source_mac);
                 if((!search3->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(source_mac)!=0)){
                   search->second->addTalker(source_mac);
                   search->second->addEndPoint(source_mac);
@@ -786,18 +800,24 @@ void RadiotapScanner::packResults(){
       std::string mac = v;
       checkLocalAdministered(mac);
   }*/
-}/*
+}
+
   for(const auto i : devices){
     if(i.second->isLocallyAdministered){
       findGloballyAdministeredInterface(i.second->mac_address);
     }
   }
-*/
+/*
   for( const auto n : ap ){
     findMainMACAP(n->getDeviceMAC());
+  }*/
+
+  for(const auto n : devices){
+    findMainMACAP(n.second->getDeviceMAC());
   }
 
   //Spostato da sopra
+/*
   for(const auto i : devices){
       if(i.second->isLocallyAdministered){
         findGloballyAdministeredInterface(i.second->mac_address);
@@ -822,9 +842,11 @@ void RadiotapScanner::alarmHandler(int sig){
 
 void RadiotapScanner::stop_pack(){
   pcap_breakloop(handle);
+  std::cout << "Dopo stop" << std::endl;
   packResults();
 }
 void RadiotapScanner::close(){
+  std::cout << "Dentro close" << std::endl;
   if(live_status){
     pcap_set_rfmon(handle,0);
     pcap_set_promisc(handle,0);
@@ -863,7 +885,9 @@ WiFiResult* RadiotapScanner::getWiFiResult(){
       for(auto i : n.second->end_point){
         auto search = devices.find(i);
         auto k = search->second->getDeviceMAC();
+        std::cout << k << " " ;
         if(search->second->main_device!=NULL){
+          std::cout << "Main device non nullo" ;
           k = search->second->main_device->getDeviceMAC();
         }
         if(k==d.mac_wifidevice){
