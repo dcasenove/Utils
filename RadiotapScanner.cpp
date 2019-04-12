@@ -613,60 +613,6 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
                 }
               }
             }
-            /*
-            printf("\tReceiver : ");
-            printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->receiver[0],frame->receiver[1],
-                       frame->receiver[2],frame->receiver[3],frame->receiver[4],
-                       frame->receiver[5]);
-            printf("\tTransmitter : ");
-            printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->transmitter[0],frame->transmitter[1],
-                       frame->transmitter[2],frame->transmitter[3],frame->transmitter[4],
-                       frame->transmitter[5]);
-            printf("\tDestination : ");
-            printf("%02x:%02x:%02x:%02x:%02x:%02x\n", frame->destination[0],frame->destination[1],
-                       frame->destination[2],frame->destination[3],frame->destination[4],
-                       frame->destination[5]);
-            auto transmitter_mac = make_hex_string(std::begin(frame->transmitter), std::end(frame->transmitter), false,  true);
-            auto search = devices.find(transmitter_mac);
-            std::cout << "Cerco";
-            if(search == devices.end()){
-               std::cout << "Non trovato,aggiungo" << std::endl;
-               if(isValidMAC(transmitter_mac)){
-                  Device *d = new Device(transmitter_mac);
-                  devices.insert({transmitter_mac,d});
-               }
-            }
-            auto receiver_mac = make_hex_string(std::begin(frame->receiver), std::end(frame->receiver), false,  true);
-            auto search2 = devices.find(receiver_mac);
-            if(search2 == devices.end()){
-              if(isValidMAC(receiver_mac)){
-                Device *d = new Device(receiver_mac);
-                d->addPowerValues(power);
-                devices.insert({receiver_mac,d});
-              }
-            }
-            auto destination_mac = make_hex_string(std::begin(frame->destination), std::end(frame->destination), false, true);
-            auto search3 = devices.find(destination_mac);
-            if(search3 == devices.end()){
-              if(isValidMAC(destination_mac)){
-                Device *d =new Device(destination_mac);
-                devices.insert({destination_mac,d});
-              }
-            }
-           search = devices.find(transmitter_mac);
-           search2 = devices.find(receiver_mac);
-           search3 = devices.find(destination_mac);
-           if(search!=devices.end() && search2!=devices.end() && search3!=devices.end()){
-             if((!search2->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(receiver_mac)!=0)){
-               search->second->addTalker(receiver_mac);
-               search2->second->addTalker(transmitter_mac);
-               search2->second->addPowerValues(power);
-             }
-             if((!search3->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(destination_mac)!=0)){
-               search->second->addTalker(destination_mac);
-               search3->second->addTalker(transmitter_mac);
-             }
-           }*/
             return;
           }
           default:

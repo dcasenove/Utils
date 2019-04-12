@@ -4,9 +4,7 @@
 #include <unordered_map>
 #include <iomanip>
 #include <sstream>
-#include "ArpScanner.h"
 #include "RadiotapScanner.h"
-#include "Pinger.h"
 
 extern "C"{
     #include <pcap.h>
