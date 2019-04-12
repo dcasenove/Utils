@@ -22,10 +22,6 @@ extern "C"{
     #endif
 }
 
-#define NPACKETS 10
-#define SIZERADIOTAP 25
-#define SIZEBEACONFRAME 4
-
 typedef struct freq_cvt_s {
     unsigned int fmin;         /* Frequenza mimina in MHz */
     unsigned  fmax;            /* Frequenza massima in MHz */
@@ -132,34 +128,6 @@ struct data_frames{
 };
 
 char filter[]="type mgt or type ctl or type data";
-
-//Acknowledgment e Clear-to-send non parsato perche' non contiene source
-//QoS Data
-//QoS Data null
-//
-
-/*
-static int fcshdr = 0;
-
-static const struct radiotap_align_size align_size_000000_00[] = {
-	[0] = { .align = 1, .size = 4, },
-	[52] = { .align = 1, .size = 4, },
-};
-
-static const struct ieee80211_radiotap_namespace vns_array[] = {
-	{
-    .oui = 0x000000,
-		.subns = 0,
-		.n_bits = sizeof(align_size_000000_00),
-		.align_size = align_size_000000_00,
-	},
-};
-
-static const struct ieee80211_radiotap_vendor_namespaces vns = {
-    .ns = vns_array,
-	  .n_ns = sizeof(vns_array)/sizeof(vns_array[0]),
-};
-*/
 
 const uint32_t crctable[] = {
    0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL, 0x076dc419L, 0x706af48fL, 0xe963a535L, 0x9e6495a3L,

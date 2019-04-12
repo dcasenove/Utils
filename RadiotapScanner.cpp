@@ -244,23 +244,9 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
     printf("===RADIOTAP HEADER===\n");
     	while (!(err = ieee80211_radiotap_iterator_next(&iter))) {
 		if (iter.this_arg_index == IEEE80211_RADIOTAP_VENDOR_NAMESPACE) {
-	/*		printf("\tvendor NS (%.2x-%.2x-%.2x:%d, %d bytes)\n",
-				iter.this_arg[0], iter.this_arg[1],
-				iter.this_arg[2], iter.this_arg[3],
-				iter.this_arg_size - 6);
-			for (i = 6; i < iter.this_arg_size; i++) {
-				if (i % 8 == 6)
-					printf("\t\t");
-				else
-					printf(" ");
-				printf("%.2x", iter.this_arg[i]);
-			}
-			printf("\n");*/
 		} else if (iter.is_radiotap_ns)
 			print_radiotap_namespace(&iter,&power);
-      //		else if (iter.current_namespace == &vns_array[0])
-//			print_test_namespace(&iter);
-	}
+	  }
 	if (err != -ENOENT) {
 		printf("Radiotap malformato\n");
 		return ;
@@ -706,8 +692,6 @@ RadiotapScanner::RadiotapScanner(char *arg, std::vector<std::string> arp_results
   live_status=false;
   //Forza arp del repeater per wifi_repeater.pcap
   arp=arp_results;
-  //
-
   u_int packetCount = 0;
   int returnValue;
     while ((returnValue = pcap_next_ex(pcap, &header, &data) >= 0) /*&& (packetCount<10)*/){
@@ -717,15 +701,6 @@ RadiotapScanner::RadiotapScanner(char *arg, std::vector<std::string> arp_results
     }
   std::cout << "Stampa di packResults" << std::endl;
   packResults();
-/*
-  printf("Stampa finale\n");
-  printf("Size :%lu\n", devices.size());
-      for( const auto& n : devices ) {
-      std::cout << "=====================================" << std::endl;
-      std::cout << "Key:[" << n.first << "]" << std::endl;
-      n.second->Print();
-      std::cout << "=====================================" << std::endl;
-  }*/
   pcap_close(pcap);
 }
 
@@ -769,7 +744,7 @@ void RadiotapScanner::packResults(){
         findGloballyAdministeredInterface(i.second->mac_address);
     }
   }
-  /*
+  
   for( const auto n : devices ){
     findMainMACAP(n.second->getDeviceMAC());
   }*/
