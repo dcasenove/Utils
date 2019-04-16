@@ -8,6 +8,7 @@
 #include <algorithm>
 #include "Device.h"
 #include "WiFiResult.h"
+#define SUPPRESS_NOT_USED_WARN __attribute__ ((unused))
 
 extern "C"{
     #include <pcap.h>
@@ -31,7 +32,7 @@ typedef struct freq_cvt_s {
 
 #define FREQ_STEP 5
 
-static freq_cvt_t freq_cvt[] = {
+SUPPRESS_NOT_USED_WARN static freq_cvt_t freq_cvt[] = {
     { 2412, 2472,   1, true },
     { 2484, 2484,  14, true },
     { 5000, 5995,   0, false },
@@ -187,4 +188,4 @@ class RadiotapScanner{
     std::unordered_map<std::string,Device*> getResult();
 };
 
-static RadiotapScanner* radiotap_scanner;
+SUPPRESS_NOT_USED_WARN static RadiotapScanner* radiotap_scanner;

@@ -226,7 +226,7 @@ static void print_radiotap_namespace(struct ieee80211_radiotap_iterator *iter,
 	}
 }
 
-void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *packet){
+void dissectpacket(SUPPRESS_NOT_USED_WARN u_char *args, const struct pcap_pkthdr *header,const u_char *packet){
     struct ieee80211_radiotap_iterator iter;
     struct signal_power power;
     static int count = 1;
@@ -518,6 +518,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
               search2 = devices.find(receiver_mac);
               search3 = devices.find(source_mac);
               if(search!=devices.end() && search2!=devices.end() && search3!=devices.end()){
+
                 search->second->addEndPoint(receiver_mac);
 
                 if((!search2->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(receiver_mac)!=0)){
@@ -530,7 +531,7 @@ void dissectpacket(u_char *args, const struct pcap_pkthdr *header,const u_char *
 
                 //search3->second->addPowerValues(power);
                 search->second->addPowerValues(power);
-                search->second->addStartPoint(source_mac);
+               search->second->addStartPoint(source_mac);
 
                 if((!search3->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(source_mac)!=0)){
                   search->second->addTalker(source_mac);
@@ -744,7 +745,7 @@ void RadiotapScanner::packResults(){
         findGloballyAdministeredInterface(i.second->mac_address);
     }
   }
-  
+
   for( const auto n : devices ){
     findMainMACAP(n.second->getDeviceMAC());
   }*/
@@ -757,7 +758,7 @@ void RadiotapScanner::startScan(int time){
   pcap_loop(handle,0,dissectpacket,NULL);
 }
 
-void RadiotapScanner::alarmHandler(int sig){
+void RadiotapScanner::alarmHandler(SUPPRESS_NOT_USED_WARN int sig){
   radiotap_scanner->stop_pack();
 }
 
@@ -825,8 +826,24 @@ WiFiResult* RadiotapScanner::getWiFiResult(){
       for(auto i : n.second->start_point){
         auto search = devices.find(i);
         auto k = search->second->getDeviceMAC();
+        if(search->second->isAP){
+          continue;
+        }
         if(search->second->main_device!=NULL){
           k = search->second->main_device->getDeviceMAC();
+          if(search->second->main_device->isAP){
+            continue;
+          }
+          //Controllo che l'entry point non sia un AP
+          bool found=false;
+          for(const auto locald : search->second->main_device->local_assigned_interfaces){
+            if(locald->isAP){
+              found=true;
+            }
+          }
+          if(found){
+            continue;
+          }
         }
         if(k==d.mac_wifidevice){
           continue;
