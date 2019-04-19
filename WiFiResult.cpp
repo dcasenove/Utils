@@ -20,10 +20,15 @@ void WiFiResult::prettyprint(){
     printf(" Signal : %d ",(signed char) n.antenna_signal);
     printf(" Noise : %d\n",(signed char) n.antenna_noise);
     std::cout << "Device connessi:" << std::endl;
-    for (std::list<std::string>::iterator it=n.connected.begin(); it != n.connected.end(); ++it)
-      std::cout << ' ' << *it << std::endl;
+    std::list<connected_device>::iterator it;
+    for (it=n.connected.begin(); it != n.connected.end(); ++it){
+      std::cout << it->mac_pc;
+      if(it->isDirectlyConnected){
+        std::cout <<" *";
+      }
     std::cout << '\n';
   }
+}
 
   for(auto n : pcs_wifi){
     std::cout << "MAC Address: " << n.mac_pc << " connesso a device MAC Address: " << n.mac_wifidevice;
@@ -32,7 +37,7 @@ void WiFiResult::prettyprint(){
       printf(" Noise : %d\n",(signed char) n.antenna_noise);
     }
     else{
-      std::cout << " tramite ethernet" << std::endl; 
+      std::cout << " tramite ethernet" << std::endl;
     }
   }
 }

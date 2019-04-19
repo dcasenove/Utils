@@ -8,6 +8,7 @@ Device::Device(std::string mac){
   power.antenna_signal=0;
   power.antenna_noise=0;
   isLocallyAdministered=checkLocalAdministered(mac_address);
+  isMulticastAddress=checkMulticastMAC(mac_address);
 }
 
 Device::~Device(){

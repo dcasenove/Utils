@@ -184,6 +184,7 @@ class RadiotapScanner{
     void stop_pack();
     void findMainMACAP(std::string mac);
     void findGloballyAdministeredInterface(std::string mac);
+    void findUnicastAddress(std::string mac);
     WiFiResult* getWiFiResult();
     std::unordered_map<std::string,Device*> getResult();
 };

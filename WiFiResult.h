@@ -8,13 +8,18 @@ struct pc_wifi{
   u_int8_t antenna_noise;
 };
 
+struct connected_device{
+  std::string mac_pc;
+  bool isDirectlyConnected;
+};
+
 struct device_wifi{
   std::string mac_wifidevice;
   std::string ssid;
   u_int8_t antenna_signal;
   u_int8_t antenna_noise;
   int channel;
-  std::list<std::string> connected;
+  std::list<connected_device> connected;
 };
 
 class WiFiResult{

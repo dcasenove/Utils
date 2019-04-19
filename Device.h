@@ -33,11 +33,31 @@ bool checkLocalAdministered(std::string mac){
   return false;
 }
 
+bool checkMulticastMAC(std::string mac){
+  std:: string octect1 = mac.substr(0,2);
+  std::stringstream ss;
+  ss << std::hex << octect1;
+  unsigned np;
+  ss >> np;
+  std::bitset<8> b(np);
+  std::string finale = b.to_string();
+  if(finale.compare(7,1,"0")==0){
+    std::cout << "Unicast" << std::endl;
+    return false;
+  }
+  else if(finale.compare(7,1,"1")==0){
+    std::cout << "Multicast" << std::endl;
+    return true;
+  }
+  return false;
+}
+
 
 class Device{
     public:
         bool isAP;
         bool isLocallyAdministered;
+        bool isMulticastAddress;
         std::string ssid;
         std::string mac_address;
         std::string ip_address;

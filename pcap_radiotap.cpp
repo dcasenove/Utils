@@ -32,6 +32,7 @@ int main(int argc, char *argv[]){
     RadiotapScanner *scanner;
     std::vector<std::string> arp;
     arp.push_back("70:4f:57:2e:2d:66");
+    arp.push_back("e0:b9:e5:b4:d3:98");
 
     try{
       scanner = new RadiotapScanner(arp);
@@ -39,7 +40,7 @@ int main(int argc, char *argv[]){
       std::cout << "Catch " << std::endl;
       return 1;
     }
-    scanner->startScan(5);
+    scanner->startScan(15);
     WiFiResult* output=scanner->getWiFiResult();
     output->prettyprint();
     delete(output);
@@ -51,6 +52,7 @@ int main(int argc, char *argv[]){
     printf("Due argomenti");
     std::vector<std::string> arp;
     arp.push_back("70:4f:57:2e:2d:66");
+    arp.push_back("e0:b9:e5:b4:d3:98");
     RadiotapScanner *scanner2 = new RadiotapScanner(argv[1],arp);
   //  scanner2->startScan();
     std::unordered_map<std::string, Device*> r = scanner2->getResult();
@@ -107,13 +109,21 @@ int main(int argc, char *argv[]){
   for(auto i : r){
     if(!i.second->isAP){
       std::cout << "Device " << i.second->getDeviceMAC() << std::endl;
-      signal_power p =i.second->returnPowerValues();
       printf("\tSignal : %d\n",(signed char) i.second->power.antenna_signal);
       printf("\tNoise : %d\n",(signed char) i.second->power.antenna_noise);
       std::cout << "Comunica con " << std::endl;
       for(unsigned long c = 0 ; c < i.second->talkers.size() ; c++){
         std::cout << i.second->talkers[c] << std::endl;
       }
+
+            std::cout << "Endpoint per " << std::endl;
+            for(unsigned long c = 0 ; c < i.second->end_point.size() ; c++){
+              std::cout << i.second->end_point[c] << std::endl;
+            }
+            std::cout << "Entrypoint per " << std::endl;
+            for(unsigned long c = 0 ; c < i.second->start_point.size() ; c++){
+              std::cout << i.second->start_point[c] << std::endl;
+            }
     }
     std::cout << "*********************" << std::endl;
   }

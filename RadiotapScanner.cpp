@@ -14,6 +14,34 @@ uint32_t crc32(uint32_t bytes_sz, const uint8_t *bytes){
    return ~crc;
 }
 
+
+void RadiotapScanner::findUnicastAddress(std::string mac){
+  std::string octect1 = mac.substr(0,2);
+  std::stringstream ss;
+  ss << std::hex << octect1;
+  unsigned np;
+  ss >> np;
+  std::bitset<8> b(np);
+  std::cout << "Prima " << b << std::endl;
+  b.set(0,0);
+  std::cout << "Dopo " << b << std::endl;
+  std::stringstream news;
+  std::string newmac;
+
+  news << std::hex << b.to_ulong();
+  newmac = news.str();
+  std::cout << "Newmac " << newmac << std::endl;
+//    b >> news >> std::hex >> newmac;
+  newmac.append(mac.substr(2,15));
+  auto search = devices.find(mac);
+  auto search2 = devices.find(newmac);
+  if(search2!=devices.end()){
+    search2->second->local_assigned_interfaces.push_back(search->second);
+    search->second->main_device=search2->second;
+    std::cout << "Ero multicast" << mac << "main device " << newmac << std::endl;
+  }
+}
+
 /*Find globally administered MAC address*/
 void RadiotapScanner::findGloballyAdministeredInterface(std::string mac){
   std::cout << "Dentro find di " << mac << std::endl;
@@ -29,7 +57,7 @@ void RadiotapScanner::findGloballyAdministeredInterface(std::string mac){
         std::cout << "Dentro if" <<  mac << std::endl;
         n.second->local_assigned_interfaces.push_back(search->second);
         search->second->main_device=n.second;
-        std::cout << " Main device " << n.second->getDeviceMAC() << std::endl;
+        std::cout << "Mac iniziale  " << mac << " Main device " << n.second->getDeviceMAC() << std::endl;
         return;
       }
     }
@@ -72,6 +100,28 @@ void RadiotapScanner::findGloballyAdministeredInterface(std::string mac){
       first_five_octects=mainmac.substr(0,15);
       found.push_back(mainmac);
     }
+    else if(s->second->isLocallyAdministered && s->second->main_device==NULL){
+      std::string octect1 = mac.substr(0,2);
+      std::stringstream ss;
+      ss << std::hex << octect1;
+      unsigned np;
+      ss >> np;
+      std::bitset<8> b(np);
+      std::cout << "Prima " << b << std::endl;
+      b.set(1,0);
+      std::cout << "Dopo " << b << std::endl;
+      std::stringstream news;
+      std::string newmac;
+
+      news << std::hex << b.to_ulong();
+      newmac = news.str();
+      std::cout << "Newmac " << newmac << std::endl;
+  //    b >> news >> std::hex >> newmac;
+      newmac.append(mac.substr(2,15));
+      std::cout << "Mac completo " << newmac << std::endl;
+      first_five_octects=newmac.substr(0,15);
+      found.push_back(newmac);
+    }
 //    first_five_octects=mac.substr(0,15);
 //    std::cout << "Primi cinque ottetti" << first_five_octects << std::endl;
 //    found.push_back(mac);
@@ -111,6 +161,11 @@ void RadiotapScanner::findGloballyAdministeredInterface(std::string mac){
       }
     }
     auto search = devices.find(found[min]);
+    if(search==devices.end()){
+      auto toinclude = devices.find(mac);
+      toinclude->second->main_device=toinclude->second;
+      return;
+    }
     std::cout << "Mac : " << search->first << std::endl;
     auto toinclude = devices.find(mac);
     toinclude->second->main_device=search->second;
@@ -729,6 +784,7 @@ void RadiotapScanner::packResults(){
       findGloballyAdministeredInterface(i.second->mac_address);
     }
   }
+
 /*
   for( const auto n : ap ){
     findMainMACAP(n->getDeviceMAC());
@@ -738,6 +794,11 @@ void RadiotapScanner::packResults(){
     findMainMACAP(n.second->getDeviceMAC());
   }
 
+  for(const auto i : devices){
+    if(i.second->isMulticastAddress){
+      findUnicastAddress(i.second->mac_address);
+    }
+  }
   //Spostato da sopra
 /*
   for(const auto i : devices){
@@ -815,12 +876,21 @@ WiFiResult* RadiotapScanner::getWiFiResult(){
         if(k==d.mac_wifidevice){
           continue;
         }
-        if(std::find(d.connected.begin(), d.connected.end(), k) == d.connected.end()){
+        bool found=false;
+        std::list<connected_device>::iterator connected_iterator;
+        for(connected_iterator = d.connected.begin();connected_iterator!=d.connected.end();connected_iterator++){
+          if(connected_iterator->mac_pc==k){
+            found=true;
+          }
+        }
+        if(!found){
           std::cout << "Aggiungo " << k;
           printf(" Signal : %d ",(signed char) search->second->power.antenna_signal);
           printf(" Noise : %d\n",(signed char) search->second->power.antenna_noise);
-
-          d.connected.push_back(k);
+          struct connected_device c;
+          c.mac_pc=k;
+          c.isDirectlyConnected=false;
+          d.connected.push_back(c);
         }
       }
       for(auto i : n.second->start_point){
@@ -848,12 +918,21 @@ WiFiResult* RadiotapScanner::getWiFiResult(){
         if(k==d.mac_wifidevice){
           continue;
         }
-        if(std::find(d.connected.begin(), d.connected.end(), k) == d.connected.end()){
-          d.connected.push_back(k);
+        bool found=false;
+        std::list<connected_device>::iterator connected_iterator;
+        for(connected_iterator = d.connected.begin();connected_iterator!=d.connected.end();connected_iterator++){
+          if(connected_iterator->mac_pc==k){
+            found=true;
+          }
+        }
+        if(!found){
           std::cout << "Aggiungo " << k;
           printf(" Signal : %d ",(signed char) search->second->power.antenna_signal);
           printf(" Noise : %d\n",(signed char) search->second->power.antenna_noise);
-
+          struct connected_device c;
+          c.mac_pc=k;
+          c.isDirectlyConnected=false;
+          d.connected.push_back(c);
         }
       }
       device_list.push_back(d);
@@ -863,7 +942,6 @@ WiFiResult* RadiotapScanner::getWiFiResult(){
   std::list<pc_wifi> pc_list;
   for(const auto n : devices){
     if(!n.second->isAP){
-
       bool main_ap=false;
       for(auto i : n.second->local_assigned_interfaces){
         if(i->isAP){
@@ -875,7 +953,9 @@ WiFiResult* RadiotapScanner::getWiFiResult(){
         continue;
       }
       pc_wifi pc;
+      std::string ssid_connected;
       if(n.second->main_device!=NULL){
+        std::cout << "Sono dentro main device non null per wifi device " << "IO " << n.second->getDeviceMAC() << "Main " << n.second->main_device->getDeviceMAC() << std::endl;
         bool main_ap=false;
         std::list<device_wifi>::iterator it1;
         for(it1 = device_list.begin() ; it1 != device_list.end() ; it1++){
@@ -903,8 +983,10 @@ WiFiResult* RadiotapScanner::getWiFiResult(){
       if(n.second->talkers.size()!=0){
         pc.mac_wifidevice=n.second->talkers[0];
         auto search = devices.find(n.second->talkers[0]);
+        ssid_connected=search->second->getDeviceSSID();
         if(search->second->main_device!=NULL){
           pc.mac_wifidevice=search->second->main_device->getDeviceMAC();
+          //ssid_connected=search->second->main_device->getDeviceSSID();
         }
       }
       std::list<pc_wifi>::iterator it;
@@ -915,6 +997,27 @@ WiFiResult* RadiotapScanner::getWiFiResult(){
         }
       }
       if(!found){
+        std::list<device_wifi>::iterator device_list_it;
+        for(device_list_it = device_list.begin(); device_list_it!=device_list.end();device_list_it++){
+          if(device_list_it->mac_wifidevice==pc.mac_wifidevice && device_list_it->ssid==ssid_connected){
+            std::list<connected_device>::iterator connected_iterator;
+            bool found=false;
+            for(connected_iterator=device_list_it->connected.begin();connected_iterator!=device_list_it->connected.end();connected_iterator++){
+              if(connected_iterator->mac_pc==pc.mac_pc){
+                std::cout << "Trovato " << pc.mac_pc << " in " << device_list_it->mac_wifidevice << std::endl;
+                found=true;
+                connected_iterator->isDirectlyConnected=true;
+              }
+            }
+            if(!found){
+              std::cout <<  "Non trovato " <<pc.mac_pc << " in " << device_list_it->mac_wifidevice << std::endl;
+              struct connected_device c;
+              c.mac_pc=pc.mac_pc;
+              c.isDirectlyConnected=true;
+              device_list_it->connected.push_back(c);
+            }
+          }
+        }
         pc_list.push_back(pc);
       }
       //pc_list.push_back(pc);
