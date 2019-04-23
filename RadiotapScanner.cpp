@@ -377,6 +377,19 @@ void dissectpacket(SUPPRESS_NOT_USED_WARN u_char *args, const struct pcap_pkthdr
             }
             return;
           }
+          //Probe request
+          case 4:{
+            struct disassociation_frame *frame;
+            frame = (disassociation_frame *)(packet+radiotapheader->it_len);
+            auto transmitter_mac = make_hex_string(std::begin(frame->transmitter), std::end(frame->transmitter), false,  true);
+            auto search = devices.find(transmitter_mac);
+            if(search == devices.end()){
+              Device * d = new Device(transmitter_mac);
+              d->addPowerValues(power);
+              devices.insert({transmitter_mac,d});
+            }
+            return;
+          }
           //Association response
           case 1:{
             printf("Association Response\n");
@@ -572,22 +585,21 @@ void dissectpacket(SUPPRESS_NOT_USED_WARN u_char *args, const struct pcap_pkthdr
               search = devices.find(transmitter_mac);
               search2 = devices.find(receiver_mac);
               search3 = devices.find(source_mac);
-              if(search!=devices.end() && search2!=devices.end() && search3!=devices.end()){
-
+              if(search!=devices.end() && search2!=devices.end()){
                 search->second->addEndPoint(receiver_mac);
-
                 if((!search2->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(receiver_mac)!=0)){
                   search->second->addTalker(receiver_mac);
                   search->second->addEndPoint(receiver_mac);
                   search2->second->addTalker(transmitter_mac);
                 //  search->second->addPowerValues(power);
                 }
+              }
 
 
                 //search3->second->addPowerValues(power);
-                search->second->addPowerValues(power);
-               search->second->addStartPoint(source_mac);
-
+               if(search!=devices.end() && search3!=devices.end()){
+                 search->second->addPowerValues(power);
+                 search->second->addStartPoint(source_mac);
                 if((!search3->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(source_mac)!=0)){
                   search->second->addTalker(source_mac);
                 //  search->second->addPowerValues(power);
@@ -634,7 +646,7 @@ void dissectpacket(SUPPRESS_NOT_USED_WARN u_char *args, const struct pcap_pkthdr
               search = devices.find(transmitter_mac);
               search2 = devices.find(receiver_mac);
               search3 = devices.find(source_mac);
-              if(search!=devices.end() && search2!=devices.end() && search3!=devices.end()){
+              if(search!=devices.end() && search2!=devices.end()){
                 search->second->addStartPoint(receiver_mac);
                 if((!search2->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(receiver_mac)!=0)){
                   search->second->addTalker(receiver_mac);
@@ -642,7 +654,9 @@ void dissectpacket(SUPPRESS_NOT_USED_WARN u_char *args, const struct pcap_pkthdr
                   search2->second->addTalker(transmitter_mac);
                   //search2->second->addPowerValues(power);
                 }
+              }
                 //Mettere i add power values fuori dall'if
+                if(search!=devices.end() && search3!=devices.end()){
                 search3->second->addPowerValues(power);
                 search->second->addEndPoint(source_mac);
                 if((!search3->second->isTalking(transmitter_mac))&&(transmitter_mac.compare(source_mac)!=0)){
