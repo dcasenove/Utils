@@ -31,9 +31,6 @@ int main(int argc, char *argv[]){
   if(argc==1){
     RadiotapScanner *scanner;
     std::vector<std::string> arp;
-    arp.push_back("70:4f:57:2e:2d:66");
-    arp.push_back("e0:b9:e5:b4:d3:98");
-
     try{
       scanner = new RadiotapScanner(arp);
     }catch(std::invalid_argument& e){
@@ -49,19 +46,14 @@ int main(int argc, char *argv[]){
   }
 
   else if(argc==2){
-    printf("Due argomenti");
     std::vector<std::string> arp;
-    arp.push_back("70:4f:57:2e:2d:66");
-    arp.push_back("e0:b9:e5:b4:d3:98");
     RadiotapScanner *scanner2 = new RadiotapScanner(argv[1],arp);
-  //  scanner2->startScan();
+    /*
     std::unordered_map<std::string, Device*> r = scanner2->getResult();
-    std::cout <<"\nStampa finale\n" << std::endl;
     for(auto i : r){
       std::cout << i.second->getDeviceMAC();
       printf(" Signal : %d ",(signed char) i.second->power.antenna_signal);
       printf(" Noise : %d\n",(signed char) i.second->power.antenna_noise);
-
     }
     for(auto i : r){
       if(i.second->isAP){
@@ -127,7 +119,7 @@ int main(int argc, char *argv[]){
     }
     std::cout << "*********************" << std::endl;
   }
-
+*/
   WiFiResult* output=scanner2->getWiFiResult();
   output->prettyprint();
   delete(output);

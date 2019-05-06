@@ -21,13 +21,10 @@ bool checkLocalAdministered(std::string mac){
   ss >> np;
   std::bitset<8> b(np);
   std::string finale = b.to_string();
-  std::cout << "Prima " << finale << std::endl;
   if(finale.compare(6,1,"0")==0){
-    std::cout << "Globally administered" << std::endl;
     return false;
   }
   else if(finale.compare(6,1,"1")==0){
-    std::cout << "Locally Administered" << std::endl;
     return true;
   }
   return false;
@@ -42,11 +39,9 @@ bool checkMulticastMAC(std::string mac){
   std::bitset<8> b(np);
   std::string finale = b.to_string();
   if(finale.compare(7,1,"0")==0){
-    std::cout << "Unicast" << std::endl;
     return false;
   }
   else if(finale.compare(7,1,"1")==0){
-    std::cout << "Multicast" << std::endl;
     return true;
   }
   return false;
